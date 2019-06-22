@@ -1,94 +1,124 @@
-baseurl = "https://pages.gitlab.io/hugo/"
-contentdir    = "content"
-layoutdir     = "layouts"
-publishdir    = "public"
-title = "Beautiful Hugo"
-canonifyurls  = true
+baseURL = "https://blog.sldk.de"
+title   = "Leonid Koftun"
 
 DefaultContentLanguage = "en"
-theme = "beautifulhugo"
-metaDataFormat = "yaml"
-pygmentsUseClasses = true
-pygmentCodeFences = true
-#disqusShortname = "XXX"
-#googleAnalytics = "XXX"
 
-[Params]
-  subtitle = "Hugo Blog Template for GitLab Pages"
-  logo = "img/avatar-icon.png"
-  favicon = "img/favicon.ico"
-  dateFormat = "January 2, 2006"
-  commit = false
-  rss = true
-  comments = true
-#  gcse = "012345678901234567890:abcdefghijk" # Get your code from google.com/cse. Make sure to go to "Look and Feel" and change Layout to "Full Width" and Theme to "Classic"
+theme = "hello-friend-ng"
 
-#[[Params.bigimg]]
-#  src = "img/triangle.jpg"
-#  desc = "Triangle"
-#[[Params.bigimg]]
-#  src = "img/sphere.jpg"
-#  desc = "Sphere"
-#[[Params.bigimg]]
-#  src = "img/hexagon.jpg"
-#  desc = "Hexagon"
+PygmentsCodeFences = true
+PygmentsStyle = "monokai"
 
-[Author]
-  name = "Some Person"
-  email = "youremail@domain.com"
-  facebook = "username"
-  googleplus = "+username" # or xxxxxxxxxxxxxxxxxxxxx
-  gitlab = "username"
-  github = "username"
-  twitter = "username"
-  reddit = "username"
-  linkedin = "username"
-  xing = "username"
-  stackoverflow = "users/XXXXXXX/username"
-  snapchat = "username"
-  instagram = "username"
-  youtube = "user/username" # or channel/channelname
-  soundcloud = "username"
-  spotify = "username"
-  bandcamp = "username"
-  itchio = "username"
-  keybase = "username"
+rssLimit  = 10  # Maximum number of items in the RSS feed.
+copyright = "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License." # This message is only used by the RSS template.
 
+# googleAnalytics = ""
+# disqusShortname = ""
 
-[[menu.main]]
-    name = "Blog"
-    url = ""
-    weight = 1
+archetypeDir = "archetypes"
+contentDir   = "content"
+dataDir      = "data"
+layoutDir    = "layouts"
+publishDir   = "public"
 
-[[menu.main]]
-    name = "About"
-    url = "page/about/"
-    weight = 3
+buildDrafts  = false
+buildFuture  = false
+buildExpored = false
+canonifyURLs = true
 
-[[menu.main]]
-    identifier = "samples"
-    name = "Samples"
-    weight = 2
+enableRobotsTXT = true
+enableGitInfo   = false
+enableEmoji     = true
+enableMissingTranslationPlaceholders = false
+disableRSS     = false
+disableSitemap = false
+disable404     = false
+disableHugoGeneratorInject = false
 
-[[menu.main]]
-    parent = "samples"
-    name = "Big Image Sample"
-    url = "post/2017-03-07-bigimg-sample"
-    weight = 1
+[permalinks]
+  posts = "/posts/:year/:month/:title/"
 
-[[menu.main]]
-    parent = "samples"
-    name = "Math Sample"
-    url = "post/2017-03-05-math-sample"
-    weight = 2
+[author]
+  name = "Leonid Koftun"
 
-[[menu.main]]
-    parent = "samples"
-    name = "Code Sample"
-    url = "post/2016-03-08-code-sample"
-    weight = 3
+[blackfriday]
+  hrefTargetBlank = true
 
-[[menu.main]]
-    name = "Tags"
-    url = "tags"
-    weight = 3
+[taxonomies]
+  tag      = "tags"
+  category = ""
+
+[params]
+  dateform        = "2006-01-02"
+  dateformShort   = "Jan 2"
+  dateformNum     = "2006-01-02"
+  dateformNumTime = "2006-01-02 15:04 -0700"
+
+  # Metadata mostly used in document's head
+  description = "Leonid's blog"
+  keywords = ""
+  images = [""]
+
+  homeSubtitle = "Code Writer"
+
+  # Prefix of link to the git commit detail page. GitInfo must be enabled.
+  # gitUrl = ""
+
+  # Integrate Javascript files or stylesheets by adding the url to the external assets or by
+  # linking local files with their path relative to the static folder, e.g. "css/styles.css"
+  customCSS = ["/css/prism.css", "/css/style.css"]
+  customJS  = ["/js/mermaid.min.js", "/js/prism.js"]
+
+  # Toggle this option need to rebuild SCSS, requires extended version of Hugo
+  justifyContent = false  # Set "text-align: justify" to .content.
+
+  # Directory name of your blog content (default is `content/posts`)
+  contentTypeName = "posts"
+  # Default theme "light" or "dark"
+  defaultTheme = "light"
+  themeColor = "#2ecc71"
+
+  [params.logo]
+    logoText     = "$ cd /home/"
+    logoHomeLink = "/"
+
+  # Social icons
+  [[params.social]]
+    name = "twitter"
+    url  = "https://twitter.com/"
+
+  [[params.social]]
+    name = "email"
+    url  = "mailto:leonid.koftun@gmail.com"
+
+  [[params.social]]
+    name = "github"
+    url  = "https://github.com/sladkoff"
+
+  [[params.social]]
+    name = "linkedin"
+    url  = "https://www.linkedin.com/in/leonid-koftun-48528953/"
+
+  [[params.social]]
+    name = "stackoverflow"
+    url = "https://stackoverflow.com/users/1510659"
+
+[languages]
+  [languages.en]
+    subtitle  = "Software Engineer"
+    weight    = 1
+    copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
+
+  [languages.de]
+    subtitle  = "Software Engineer"
+    weight    = 2
+    copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
+
+[menu]
+  [[menu.main]]
+    identifier = "about"
+    name       = "About"
+    url        = "about/"
+  [[menu.main]]
+    identifier = "posts"
+    name       = "Posts"
+    url        = "posts/"
