@@ -1,4 +1,4 @@
-baseURL = "https://blog.sldk.de"
+baseURL = "https://sldk.gitlab.io"
 title   = "Leonid Koftun"
 
 DefaultContentLanguage = "en"
