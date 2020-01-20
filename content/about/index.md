@@ -1,16 +1,20 @@
 ---
 title: About
-date: "2014-04-09"
+date: "2019-06-22"
+comments: false
 ---
 
-Hugo is the **world’s fastest framework for building websites**. It is written in Go.
+#### Hi :wave:
 
-It makes use of a variety of open source projects including:
+My name is Leo. I'm 25 years old and I do software development. I'm based in Munich.
 
-* https://github.com/russross/blackfriday
-* https://github.com/alecthomas/chroma
-* https://github.com/muesli/smartcrop
-* https://github.com/spf13/cobra
-* https://github.com/spf13/viper
 
-Learn more and contribute on [GitHub](https://github.com/gohugoio).
+
+#### What is this site?
+
+This is supposed to become my blog. I'll post random stuff here. The main focus is probably  software related. 
+
+#### Why does this exist?
+
+I don't know honestly. I'm seeing this as an exercise for myself. We often do interesting things 
+at work and in private which mostly go unnoticed. Writing them down should help me internalize such things and maybe someone will find it helpful at the same time. 
