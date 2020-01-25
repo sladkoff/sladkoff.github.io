@@ -1,4 +1,4 @@
-baseURL = "https://blog.sldk.de"
+baseURL = "https://blog-sldk-de.netlify.com/"
 title   = "Leonid Koftun"
 
 DefaultContentLanguage = "en"
