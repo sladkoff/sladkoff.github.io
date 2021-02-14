@@ -23,8 +23,12 @@ jobs:
       - name: Build
         run: hugo --minify
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+      - name: GitHub Pages
+        uses: crazy-max/ghaction-github-pages@v2.2.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
+          # Build directory to deploy
+          build_dir: ./public
+          # Write the given domain name to the CNAME file
+          fqdn: blog.sldk.de
+          # Allow Jekyll to build your site
+          jekyll: false
