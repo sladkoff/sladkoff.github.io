@@ -1,0 +1,114 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Leonid Koftun</title><link>https://blog.sldk.de/posts/</link><description>Recent content in Posts on Leonid Koftun</description><generator>Hugo -- gohugo.io</generator><copyright>&lt;a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0&lt;/a></copyright><lastBuildDate>Sat, 25 Jan 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://blog.sldk.de/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Hosting static sites generated with Hugo</title><link>https://blog.sldk.de/posts/2020/01/hosting-static-sites-generated-with-hugo/</link><pubDate>Sat, 25 Jan 2020 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/posts/2020/01/hosting-static-sites-generated-with-hugo/</guid><description>I&amp;rsquo;m using Hugo to generate a static website / blog from markdown.
+This means that I have some source files on my local machine and I run hugo to generate static html/css files. Once I have these static files I needed to decide how to publish them to the internet.
+This post is a subjective comparison of possible hosting solutions when working with Hugo.
+Gitlab Pages My initial plan was to use Gitlab Pages because my source files are already checked into a private git repository on Gitlab.</description><content type="html"><![CDATA[<p>I&rsquo;m using <a href="https://gohugo.io/">Hugo</a> to generate a static website / blog from markdown.</p>
+<p>This means that I have some source files on my local machine and I run <code>hugo</code> to generate static html/css files.
+Once I have these static files I needed to decide how to publish them to the internet.</p>
+<p>This post is a subjective comparison of possible hosting solutions when working with Hugo.</p>
+<h2 id="gitlab-pages">Gitlab Pages</h2>
+<p>My initial plan was to use <a href="https://about.gitlab.com/product/pages/">Gitlab Pages</a> because my source files are already checked into a private git repository on Gitlab.</p>
+<p>I used a simple <code>.gitlab-ci.yaml</code> found on <a href="https://gitlab.com/pages/hugo:">https://gitlab.com/pages/hugo:</a></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">image</span>: registry.gitlab.com/pages/hugo:latest
+
+<span style="color:#66d9ef">variables</span>:
+  <span style="color:#66d9ef">GIT_SUBMODULE_STRATEGY</span>: recursive
+
+<span style="color:#66d9ef">pages</span>:
+  <span style="color:#66d9ef">script</span>:
+  - hugo
+  <span style="color:#66d9ef">artifacts</span>:
+    <span style="color:#66d9ef">paths</span>:
+    - public
+  <span style="color:#66d9ef">only</span>:
+  - master
+</code></pre></div><p>This would run on my master branch and publish the generated content to Gitlab Pages.
+The setup is simple and everything was in one place, a custom domain can be used and we get a Let&rsquo;s Encrypt TLS certificate as well.</p>
+<p>What made me look for an alternative solution? Two things:</p>
+<ul>
+<li>For some reason I could not get custom 404 pages to work with this setup. When accessing a non-existent URL it would always
+load a generic Gitlab 404 page instead of my custom Hugo one. It may be related to this <a href="https://gitlab.com/gitlab-org/gitlab-pages/issues/183">issue</a>.</li>
+<li>The loading times seemed atrociously slow for what I was serving 🐌. 5-10 seconds on an empty cache was quite a deal-breaker.</li>
+</ul>
+<h2 id="github-pages">Github Pages</h2>
+<p>Everybody and their mom has a Github account. Github also has <a href="https://pages.github.com/">Pages</a>. So I tried out hosting my hugo content there.</p>
+<p>The setup is not so elegant anymore. I followed the instructions on <a href="https://gohugo.io/hosting-and-deployment/hosting-on-github/">https://gohugo.io/hosting-and-deployment/hosting-on-github/</a> and ended up with <strong>two</strong> git repos.
+One for my source files (I used my existing Gitlab repo) and one for the generated content under <code>/public</code> which needs to be set up as a git submodule.</p>
+<p>This could still be automated with Gitlab CI pretty easily with something like (not tested):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">image</span>: registry.gitlab.com/pages/hugo:latest
+
+<span style="color:#66d9ef">variables</span>:
+  <span style="color:#66d9ef">GIT_SUBMODULE_STRATEGY</span>: recursive
+
+<span style="color:#66d9ef">github-pages</span>:
+  <span style="color:#66d9ef">script</span>:
+  - hugo
+  - cd public <span style="color:#75715e">&amp;&amp;</span> git -am <span style="color:#e6db74">&#34;Build for Github Pages&#34;</span> <span style="color:#75715e">&amp;&amp;</span> git push
+  <span style="color:#66d9ef">artifacts</span>:
+    <span style="color:#66d9ef">paths</span>:
+    - public
+  <span style="color:#66d9ef">only</span>:
+  - master
+</code></pre></div><p>This tells Gitlab to build the static page and then push the git submodule to Github as well.</p>
+<p>Github Pages were subjectively faster but there are downsides:</p>
+<ul>
+<li>I still didn&rsquo;t get a custom 404 page 😥</li>
+<li>I don&rsquo;t like having one repo for the source and one for the generated content</li>
+<li>Github Pages works only with <strong>public</strong> repositories (unless you have a paid account AFAIK)</li>
+</ul>
+<h2 id="netlify">Netlify</h2>
+<p>I haven&rsquo;t heard of <a href="https://www.netlify.com/">Netlify</a> before. I think it came up in some Gitlab issue while I was looking for alternatives.</p>
+<p>I used their web UI to set everything up but I read that there&rsquo;s also a CLI available which should be cool.
+Anyway, I just had to connect my Gitlab account and select the source repository which I had already been working on.</p>
+<p>Netlify automagically recognized that the contents of the repo had to be build with hugo and suggested that for the build options:</p>
+
+    <img src="/img/posts/netlify_screenshot.png"  alt="Netlify wizard"  class="center"  style="border-radius: 8px;"  />
+
+
+<p>Whenever I push to <code>master</code> in Gitlab a hook on Netlify builds and publishes the site. I could get rid of the <code>.gitlab-ci.yml</code> altogether.</p>
+<p>I like about this setup:</p>
+<ul>
+<li>I have <strong>one private</strong> git repo on Gitlab</li>
+<li>I haven&rsquo;t had issues with loading times on Netlify so far</li>
+</ul>
+<p>I understand that there could be one big downside to this approach for other people.
+On Gitlab / Github you get a cool <code>xyz.gitlab.io</code> / <code>xyz.github.io</code> domain for free.
+A free <code>xyz.netfliy.com</code> domain is not so cool for a tech blog - so I&rsquo;d say that you <strong>need</strong> a custom domain if you choose to go that route.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>If you&rsquo;re using hugo to generate your static site, you can use Gitlab Pages, Github Pages and Netlify as a hosting provider quite easily.</p>
+<p>Gitlab turned out to have slow loading times. Github requires a weird repo / branching setup. Netlify works nicely together with Gitlab but
+you&rsquo;ll probably want a custom domain.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Loading Times (cold cache)</th>
+<th>Private Repo</th>
+<th>Domains</th>
+<th>TLS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Gitlab Pages</strong></td>
+<td>~5s ⛔</td>
+<td>Yes</td>
+<td>.gitlab.io, custom</td>
+<td>Let&rsquo;s Encrypt</td>
+</tr>
+<tr>
+<td><strong>Github Pages</strong></td>
+<td>&lt;1s</td>
+<td>No ⛔</td>
+<td>.github.io, custom</td>
+<td>Let&rsquo;s Encrypt</td>
+</tr>
+<tr>
+<td><strong>Netlify</strong></td>
+<td>&lt;1s</td>
+<td>Yes</td>
+<td>.netlify.com, custom</td>
+<td>Let&rsquo;s Encrypt</td>
+</tr>
+</tbody>
+</table>
+]]></content></item></channel></rss>
