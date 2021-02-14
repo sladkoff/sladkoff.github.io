@@ -1,4 +1,4 @@
-baseURL = "https://sladkoff.github.io"
+baseURL = "https://blog.sldk.de"
 title   = "Leonid Koftun"
 
 DefaultContentLanguage = "en"
@@ -11,7 +11,7 @@ PygmentsStyle = "monokai"
 rssLimit  = 10  # Maximum number of items in the RSS feed.
 copyright = "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License." # This message is only used by the RSS template.
 
-# googleAnalytics = ""
+googleAnalytics = "G-4S8T5XN1Q2"
 disqusShortname = "blog-sldk-de"
 
 archetypeDir = "archetypes"
