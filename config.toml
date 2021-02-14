@@ -26,7 +26,7 @@ buildExpored = false
 canonifyURLs = true
 
 enableRobotsTXT = true
-enableGitInfo   = false
+enableGitInfo   = true
 enableEmoji     = true
 enableMissingTranslationPlaceholders = false
 disableRSS     = false
@@ -95,10 +95,6 @@ disableHugoGeneratorInject = false
 
   # Social icons
   [[params.social]]
-    name = "twitter"
-    url  = "https://twitter.com/"
-
-  [[params.social]]
     name = "email"
     url  = "mailto:leonid.koftun@gmail.com"
 
@@ -108,7 +104,16 @@ disableHugoGeneratorInject = false
 
   [[params.social]]
     name = "linkedin"
-    url  = "https://www.linkedin.com/in/leonid-koftun-48528953/"
+    url  = "https://www.linkedin.com/in/leonidkoftun"
+
+
+  [[params.social]]
+    name = "instagram"
+    url = "https://instagram.com/sladkoff2"
+
+  [[params.social]]
+    name = "twitter"
+    url  = "https://twitter.com/sladkovik"
 
   [[params.social]]
     name = "stackoverflow"
