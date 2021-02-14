@@ -23,12 +23,8 @@ jobs:
       - name: Build
         run: hugo --minify
 
-      - name: GitHub Pages
-        uses: crazy-max/ghaction-github-pages@v2.2.0
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@4.0.0
         with:
-          # Build directory to deploy
-          build_dir: ./public
-          # Write the given domain name to the CNAME file
-          fqdn: blog.sldk.de
-          # Allow Jekyll to build your site
-          jekyll: false
+          branch: gh-pages
+          folder: ./public
