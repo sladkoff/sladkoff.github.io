@@ -1,45 +1,30 @@
+# Basics
 baseURL = "https://blog.sldk.de"
 title   = "Leonid Koftun"
 languageCode = "en-us"
 theme        = "hello-friend-ng"
 paginate     = 10
-
 DefaultContentLanguage = "en"
 
-PygmentsCodeFences = true
-PygmentsStyle = "monokai"
-
-rssLimit  = 10  # Maximum number of items in the RSS feed.
-copyright = "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License." # This message is only used by the RSS template.
-
+# Google Analytics
 googleAnalytics = "G-4S8T5XN1Q2"
+
+# Non-standard?
 disqusShortname = "blog-sldk-de"
 
-archetypeDir = "archetypes"
-contentDir   = "content"
-dataDir      = "data"
-layoutDir    = "layouts"
-publishDir   = "public"
-
+# Build settings
 buildDrafts  = false
 buildFuture  = false
 buildExpored = false
 canonifyURLs = true
 
+# Enable things
 enableRobotsTXT = true
 enableGitInfo   = true
 enableEmoji     = true
-enableMissingTranslationPlaceholders = false
-disableRSS     = false
-disableSitemap = false
-disable404     = false
-disableHugoGeneratorInject = false
 
 [permalinks]
   posts = "/:year/:month/:title/"
-
-[author]
-  name = "Leonid Koftun"
 
 [blackfriday]
   hrefTargetBlank = true
@@ -54,15 +39,15 @@ disableHugoGeneratorInject = false
   dateformNum     = "2006-01-02"
   dateformNumTime = "2006-01-02 15:04 -0700"
 
+  homeSubtitle = "Software Engineer"
+
   # Metadata mostly used in document's head
   description = "Leonid's blog"
   keywords = ""
   images = [""]
 
-  homeSubtitle = "Software Engineer"
-
   # Prefix of link to the git commit detail page. GitInfo must be enabled.
-  # gitUrl = ""
+   gitUrl = "https://github.com/sladkoff/sladkoff.github.io/commit/"
 
   # Set disableReadOtherPosts to true in order to hide the links to other posts.
   disableReadOtherPosts = false
@@ -72,27 +57,13 @@ disableHugoGeneratorInject = false
   customCSS = ["/css/prism.css", "/css/style.css"]
   customJS  = ["/js/prism.js"]
 
-  # Toggle this option need to rebuild SCSS, requires extended version of Hugo
-  justifyContent = false  # Set "text-align: justify" to .content.
-
-  # Directory name of your blog content (default is `content/posts`)
-  contentTypeName = "posts"
-
   # Default theme "light" or "dark"
   defaultTheme = "light"
   themeColor = "#2ecc71"
 
-  # Colors for favicons
-#  [params.favicon.color]
-#    mask = "#2ecc71"
-#    msapplication = "#2ecc71"
-#    theme = "#2ecc71"
-
   [params.logo]
     logoText     = "$ cd /home/"
     logoHomeLink = "/"
-    # Set to a valid CSS color to change the cursor in the logo.
-    # logoColor    = "#67a2c9"
 
   # Social icons
   [[params.social]]
@@ -124,11 +95,6 @@ disableHugoGeneratorInject = false
   [languages.en]
     subtitle  = "Software Engineer"
     weight    = 1
-    copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
-
-  [languages.de]
-    subtitle  = "Software Engineer"
-    weight    = 2
     copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
 
 [menu]
