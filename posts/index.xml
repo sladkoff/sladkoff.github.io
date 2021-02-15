@@ -1,4 +1,89 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Leonid Koftun</title><link>https://blog.sldk.de/posts/</link><description>Recent content in Posts on Leonid Koftun</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><copyright>&lt;a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0&lt;/a></copyright><lastBuildDate>Sat, 25 Jan 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://blog.sldk.de/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Hosting static sites generated with Hugo</title><link>https://blog.sldk.de/2020/01/hosting-static-sites-generated-with-hugo/</link><pubDate>Sat, 25 Jan 2020 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2020/01/hosting-static-sites-generated-with-hugo/</guid><description>I&amp;rsquo;m using Hugo to generate a static website / blog from markdown.
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Leonid Koftun</title><link>https://blog.sldk.de/posts/</link><description>Recent content in Posts on Leonid Koftun</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><copyright>&lt;a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0&lt;/a></copyright><lastBuildDate>Mon, 15 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://blog.sldk.de/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>How I build my resume from Markdown</title><link>https://blog.sldk.de/2021/02/how-i-build-my-resume-from-markdown/</link><pubDate>Mon, 15 Feb 2021 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2021/02/how-i-build-my-resume-from-markdown/</guid><description>I was recently inspired to update my Software Engineering resume. The problem with that was that up until now my resume was a Word docx document that I would manually export as PDF and distribute. I used to always get frustrated when I had to touch this document because I hate formatting text in Word and/or Google Docs.
+After stumbling upon this Techlead video on YouTube I was convinced that I didn&amp;rsquo;t need any fancy layouts for my CV anyway and that I would go with a minimalist plain-text approach.</description><content type="html"><![CDATA[<p>I was recently inspired to update my Software Engineering resume.
+The problem with that was that up until now my resume was a Word <code>docx</code> document that I would manually export as PDF and distribute.
+I used to always get frustrated when I had to touch this document because I <strong>hate</strong> formatting text in Word and/or Google Docs.</p>
+<p>After stumbling upon this <a href="https://www.youtube.com/watch?v=xpaz7nrNmXA">Techlead video on YouTube</a> I was convinced that I didn&rsquo;t
+need any fancy layouts for my CV anyway and that I would go with a minimalist plain-text approach.</p>
+<p>If you&rsquo;re like me and you don&rsquo;t need pie charts on your resume, you might be asking:</p>
+<blockquote>
+<p>Why not write my resume in good old Markdown? Why not just make it open-source on Github as well?
+Why not use Github Actions to build a distributable PDF version of it? 🤔</p>
+</blockquote>
+<p>Hey, that&rsquo;s what I did! And I find it pretty cool. So I recommend you do it, too. Here&rsquo;s why.</p>
+<h2 id="the-opensource-markdown-resume-">The Opensource Markdown Resume ™️</h2>
+<h3 id="easy-to-write-and-maintain">Easy to write and maintain!</h3>
+<p>It&rsquo;s one file. It&rsquo;s simple <strong>af</strong>. I only used headings and bullet lists and decided that it was enough to get my points across.</p>
+<p>You can see it on <a href="https://github.com/sladkoff/resume/edit/master/README.md">Github</a> and fork it or whatever.</p>
+<h3 id="automated-pdf-export">Automated PDF export!</h3>
+<p>I found this <a href="https://github.com/BaileyJM02/markdown-to-pdf">markdown-to-pdf</a> Github Action that exports - you guessed it - Markdown to PDF.
+It renders the PDF with the default Github styling, so the result (<a href="https://github.com/sladkoff/resume/releases/tag/2021-02-13">preview available here</a>) looks very similar to the <a href="https://github.com/sladkoff/resume">web version</a>.</p>
+<p>Here&rsquo;s the full annotated <a href="https://raw.githubusercontent.com/sladkoff/resume/master/.github/workflows/release.yml">Github Action</a> that I&rsquo;m using now:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">on</span>:
+  <span style="color:#f92672">push</span>:
+    <span style="color:#f92672">tags</span>:
+      - <span style="color:#e6db74">&#39;*&#39;</span>                                                 <span style="color:#75715e"># (1)</span>
+
+<span style="color:#f92672">name</span>: <span style="color:#ae81ff">Upload Release Asset</span>
+
+<span style="color:#f92672">jobs</span>:
+  <span style="color:#f92672">build</span>:
+    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Upload Release Asset</span>
+    <span style="color:#f92672">runs-on</span>: <span style="color:#ae81ff">ubuntu-latest</span>
+    <span style="color:#f92672">steps</span>:
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Checkout code</span>
+        <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/checkout@v2</span>
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Remove swag line                             </span> <span style="color:#75715e"># (2)</span>
+        <span style="color:#f92672">run</span>: <span style="color:#ae81ff">sed -i &#39;1d&#39; README.md</span>
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Build PDF from Markdown                      </span> <span style="color:#75715e"># (3)</span>
+        <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">BaileyJM02/markdown-to-pdf@v1</span>
+        <span style="color:#f92672">with</span>:
+          <span style="color:#f92672">input_dir</span>: <span style="color:#ae81ff">.</span>
+          <span style="color:#f92672">output_dir</span>: <span style="color:#ae81ff">out</span>
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Rename pdf</span>
+        <span style="color:#f92672">run</span>: <span style="color:#ae81ff">cp out/README.pdf ./leonid_koftun_resume.pdf</span>
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Create Release                               </span> <span style="color:#75715e"># (4)</span>
+        <span style="color:#f92672">id</span>: <span style="color:#ae81ff">create_release</span>
+        <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/create-release@v1</span>
+        <span style="color:#f92672">env</span>:
+          <span style="color:#f92672">GITHUB_TOKEN</span>: <span style="color:#ae81ff">${{ secrets.GITHUB_TOKEN }}</span>
+        <span style="color:#f92672">with</span>:
+          <span style="color:#f92672">tag_name</span>: <span style="color:#ae81ff">${{ github.ref }}</span>
+          <span style="color:#f92672">release_name</span>: <span style="color:#ae81ff">Release ${{ github.ref }}</span>
+          <span style="color:#f92672">draft</span>: <span style="color:#66d9ef">false</span>
+          <span style="color:#f92672">prerelease</span>: <span style="color:#66d9ef">false</span>
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Upload Release Asset                         </span> <span style="color:#75715e"># (5)</span>
+        <span style="color:#f92672">id</span>: <span style="color:#ae81ff">upload-release-asset</span>
+        <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/upload-release-asset@v1</span>
+        <span style="color:#f92672">env</span>:
+          <span style="color:#f92672">GITHUB_TOKEN</span>: <span style="color:#ae81ff">${{ secrets.GITHUB_TOKEN }}</span>
+        <span style="color:#f92672">with</span>:
+          <span style="color:#f92672">upload_url</span>: <span style="color:#ae81ff">${{ steps.create_release.outputs.upload_url }}</span>
+          <span style="color:#f92672">asset_path</span>: <span style="color:#ae81ff">./leonid_koftun_resume.pdf</span>
+          <span style="color:#f92672">asset_name</span>: <span style="color:#ae81ff">leonid_koftun_resume.pdf</span>
+          <span style="color:#f92672">asset_content_type</span>: <span style="color:#ae81ff">application/pdf</span>
+</code></pre></div><h4 id="annotations">Annotations</h4>
+<ol>
+<li>Build PDF when any tag is pushed</li>
+<li>(Optional) This is just &lsquo;pre-processing&rsquo; to remove some HTML content that I don&rsquo;t want to be rendered to PDF (the first line of the Markdown contains some links that only make sense on the Github web view)</li>
+<li>The actual <a href="https://github.com/BaileyJM02/markdown-to-pdf">markdown-to-pdf</a> step with minimal config</li>
+<li>Creates a Github release for the tag</li>
+<li>Uploads the generated PDF to the tagged release</li>
+</ol>
+<h3 id="the-opensource-aspect">The opensource aspect</h3>
+<p>As you probably noticed by now, my resume is publicly available on Github.</p>
+<p>Potential employers and recruiters can grab a copy there. My peers and colleagues can review it and tell me what I suck at the most (come at me).</p>
+<h3 id="any-issues-with-this">Any issues with this?</h3>
+<p>Yes.</p>
+<ul>
+<li>If you want to use fancy column layouts and colors and unicorns 🦄 in your resume, then this probably isn&rsquo;t for you (you could make it complicated and add CSS and templating but that kind of defeats the purpose of simplicity in the <code>.md</code> approach IMO).</li>
+<li>If you&rsquo;re afraid of me or one of my cats copying some lines from your own personal resume, I do not recommend that you make it public.</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<blockquote>
+<p>Keep your resume simple by using Markdown, publish it on Github if you want to be a cool kid.</p>
+</blockquote>
+<p>What do you think of this nonsense? #hmu on <a href="https://twitter.com/sladkovik">Twitter</a> or <a href="https://www.instagram.com/sladkoff2/">Instagram</a>. 🤙</p>
+]]></content></item><item><title>Hosting static sites generated with Hugo</title><link>https://blog.sldk.de/2020/01/hosting-static-sites-generated-with-hugo/</link><pubDate>Sat, 25 Jan 2020 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2020/01/hosting-static-sites-generated-with-hugo/</guid><description>I&amp;rsquo;m using Hugo to generate a static website / blog from markdown.
 This means that I have some source files on my local machine and I run hugo to generate static html/css files. Once I have these static files I needed to decide how to publish them to the internet.
 This post is a subjective comparison of possible hosting solutions when working with Hugo.
 Gitlab Pages My initial plan was to use Gitlab Pages because my source files are already checked into a private git repository on Gitlab.</description><content type="html"><![CDATA[<p>I&rsquo;m using <a href="https://gohugo.io/">Hugo</a> to generate a static website / blog from markdown.</p>
