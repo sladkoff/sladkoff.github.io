@@ -2,7 +2,7 @@
 title: How I build my resume from Markdown
 date: "2021-02-15"
 comments: true
-draft: true
+draft: false
 tags:
   - markdown
   - pdf
