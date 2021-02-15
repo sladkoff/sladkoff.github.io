@@ -1,4 +1,4 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Leonid Koftun</title><link>https://blog.sldk.de/posts/</link><description>Recent content in Posts on Leonid Koftun</description><generator>Hugo -- gohugo.io</generator><copyright>&lt;a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0&lt;/a></copyright><lastBuildDate>Sat, 25 Jan 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://blog.sldk.de/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Hosting static sites generated with Hugo</title><link>https://blog.sldk.de/posts/2020/01/hosting-static-sites-generated-with-hugo/</link><pubDate>Sat, 25 Jan 2020 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/posts/2020/01/hosting-static-sites-generated-with-hugo/</guid><description>I&amp;rsquo;m using Hugo to generate a static website / blog from markdown.
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Leonid Koftun</title><link>https://blog.sldk.de/posts/</link><description>Recent content in Posts on Leonid Koftun</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><copyright>&lt;a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0&lt;/a></copyright><lastBuildDate>Sat, 25 Jan 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://blog.sldk.de/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Hosting static sites generated with Hugo</title><link>https://blog.sldk.de/2020/01/hosting-static-sites-generated-with-hugo/</link><pubDate>Sat, 25 Jan 2020 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2020/01/hosting-static-sites-generated-with-hugo/</guid><description>I&amp;rsquo;m using Hugo to generate a static website / blog from markdown.
 This means that I have some source files on my local machine and I run hugo to generate static html/css files. Once I have these static files I needed to decide how to publish them to the internet.
 This post is a subjective comparison of possible hosting solutions when working with Hugo.
 Gitlab Pages My initial plan was to use Gitlab Pages because my source files are already checked into a private git repository on Gitlab.</description><content type="html"><![CDATA[<p>I&rsquo;m using <a href="https://gohugo.io/">Hugo</a> to generate a static website / blog from markdown.</p>
@@ -8,19 +8,19 @@ Once I have these static files I needed to decide how to publish them to the int
 <h2 id="gitlab-pages">Gitlab Pages</h2>
 <p>My initial plan was to use <a href="https://about.gitlab.com/product/pages/">Gitlab Pages</a> because my source files are already checked into a private git repository on Gitlab.</p>
 <p>I used a simple <code>.gitlab-ci.yaml</code> found on <a href="https://gitlab.com/pages/hugo:">https://gitlab.com/pages/hugo:</a></p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">image</span>: registry.gitlab.com/pages/hugo:latest
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.com/pages/hugo:latest</span>
 
-<span style="color:#66d9ef">variables</span>:
-  <span style="color:#66d9ef">GIT_SUBMODULE_STRATEGY</span>: recursive
+<span style="color:#f92672">variables</span>:
+  <span style="color:#f92672">GIT_SUBMODULE_STRATEGY</span>: <span style="color:#ae81ff">recursive</span>
 
-<span style="color:#66d9ef">pages</span>:
-  <span style="color:#66d9ef">script</span>:
-  - hugo
-  <span style="color:#66d9ef">artifacts</span>:
-    <span style="color:#66d9ef">paths</span>:
-    - public
-  <span style="color:#66d9ef">only</span>:
-  - master
+<span style="color:#f92672">pages</span>:
+  <span style="color:#f92672">script</span>:
+  - <span style="color:#ae81ff">hugo</span>
+  <span style="color:#f92672">artifacts</span>:
+    <span style="color:#f92672">paths</span>:
+    - <span style="color:#ae81ff">public</span>
+  <span style="color:#f92672">only</span>:
+  - <span style="color:#ae81ff">master</span>
 </code></pre></div><p>This would run on my master branch and publish the generated content to Gitlab Pages.
 The setup is simple and everything was in one place, a custom domain can be used and we get a Let&rsquo;s Encrypt TLS certificate as well.</p>
 <p>What made me look for an alternative solution? Two things:</p>
@@ -34,20 +34,20 @@ load a generic Gitlab 404 page instead of my custom Hugo one. It may be related 
 <p>The setup is not so elegant anymore. I followed the instructions on <a href="https://gohugo.io/hosting-and-deployment/hosting-on-github/">https://gohugo.io/hosting-and-deployment/hosting-on-github/</a> and ended up with <strong>two</strong> git repos.
 One for my source files (I used my existing Gitlab repo) and one for the generated content under <code>/public</code> which needs to be set up as a git submodule.</p>
 <p>This could still be automated with Gitlab CI pretty easily with something like (not tested):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">image</span>: registry.gitlab.com/pages/hugo:latest
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.com/pages/hugo:latest</span>
 
-<span style="color:#66d9ef">variables</span>:
-  <span style="color:#66d9ef">GIT_SUBMODULE_STRATEGY</span>: recursive
+<span style="color:#f92672">variables</span>:
+  <span style="color:#f92672">GIT_SUBMODULE_STRATEGY</span>: <span style="color:#ae81ff">recursive</span>
 
-<span style="color:#66d9ef">github-pages</span>:
-  <span style="color:#66d9ef">script</span>:
-  - hugo
-  - cd public <span style="color:#75715e">&amp;&amp;</span> git -am <span style="color:#e6db74">&#34;Build for Github Pages&#34;</span> <span style="color:#75715e">&amp;&amp;</span> git push
-  <span style="color:#66d9ef">artifacts</span>:
-    <span style="color:#66d9ef">paths</span>:
-    - public
-  <span style="color:#66d9ef">only</span>:
-  - master
+<span style="color:#f92672">github-pages</span>:
+  <span style="color:#f92672">script</span>:
+  - <span style="color:#ae81ff">hugo</span>
+  - <span style="color:#ae81ff">cd public &amp;&amp; git -am &#34;Build for Github Pages&#34; &amp;&amp; git push</span>
+  <span style="color:#f92672">artifacts</span>:
+    <span style="color:#f92672">paths</span>:
+    - <span style="color:#ae81ff">public</span>
+  <span style="color:#f92672">only</span>:
+  - <span style="color:#ae81ff">master</span>
 </code></pre></div><p>This tells Gitlab to build the static page and then push the git submodule to Github as well.</p>
 <p>Github Pages were subjectively faster but there are downsides:</p>
 <ul>
