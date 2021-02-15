@@ -1,9 +1,10 @@
 baseURL = "https://blog.sldk.de"
 title   = "Leonid Koftun"
+languageCode = "en-us"
+theme        = "hello-friend-ng"
+paginate     = 10
 
 DefaultContentLanguage = "en"
-
-theme = "hello-friend-ng"
 
 PygmentsCodeFences = true
 PygmentsStyle = "monokai"
@@ -35,7 +36,7 @@ disable404     = false
 disableHugoGeneratorInject = false
 
 [permalinks]
-  posts = "/posts/:year/:month/:title/"
+  posts = "/:year/:month/:title/"
 
 [author]
   name = "Leonid Koftun"
@@ -82,10 +83,10 @@ disableHugoGeneratorInject = false
   themeColor = "#2ecc71"
 
   # Colors for favicons
-  [params.favicon.color]
-    mask = "#2ecc71"
-    msapplication = "#2ecc71"
-    theme = "#2ecc71"
+#  [params.favicon.color]
+#    mask = "#2ecc71"
+#    msapplication = "#2ecc71"
+#    theme = "#2ecc71"
 
   [params.logo]
     logoText     = "$ cd /home/"
@@ -134,8 +135,8 @@ disableHugoGeneratorInject = false
   [[menu.main]]
     identifier = "about"
     name       = "About"
-    url        = "about/"
+    url        = "/about"
   [[menu.main]]
     identifier = "posts"
     name       = "Posts"
-    url        = "posts/"
+    url        = "/posts"
