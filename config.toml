@@ -57,8 +57,6 @@ enableEmoji     = true
   customCSS = ["/css/prism.css", "/css/style.css"]
   customJS  = ["/js/prism.js"]
 
-  # Default theme "light" or "dark"
-  defaultTheme = "light"
   themeColor = "#2ecc71"
 
   [params.logo]
@@ -77,7 +75,6 @@ enableEmoji     = true
   [[params.social]]
     name = "linkedin"
     url  = "https://www.linkedin.com/in/leonidkoftun"
-
 
   [[params.social]]
     name = "instagram"
