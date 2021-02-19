@@ -1,0 +1,150 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="ie=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=author content><meta name=description content="Today we&amp;rsquo;re having a look at how to set up a GitOps pipeline for your Kubernetes cluster with Flux v2.
+We will first go through some core concepts of Flux and then create our first GitOps workflow.
+You will need access to a Kubernetes cluster, a shell interface and a Github account to follow this guide. Note that you can use any git provider (Gitlab, Bitbucket, custom) but you&amp;rsquo;ll have to modify the provided example commands."><meta name=keywords content=",fluxcd,gitops,kubernetes,devops,kustomize"><meta name=robots content="noodp"><meta name=theme-color content="#2ecc71"><link rel=canonical href=https://blog.sldk.de/2021/02/introduction-to-gitops-with-flux-v2/><title>Introduction to GitOps with Flux v2 :: Leonid Koftun — Software Engineer</title><link href=https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css rel=stylesheet type=text/css><link rel=stylesheet href=https://blog.sldk.de/main.d7bdd8ee18bfbf4c605488a7e5b1b92cd980dfeed2bdaeab4dd5e931a7a78bc0.css><link rel=stylesheet type=text/css href=https://blog.sldk.de/css/prism.css><link rel=stylesheet type=text/css href=https://blog.sldk.de/css/style.css><meta itemprop=name content="Introduction to GitOps with Flux v2"><meta itemprop=description content="Today we&rsquo;re having a look at how to set up a GitOps pipeline for your Kubernetes cluster with Flux v2.
+We will first go through some core concepts of Flux and then create our first GitOps workflow.
+You will need access to a Kubernetes cluster, a shell interface and a Github account to follow this guide. Note that you can use any git provider (Gitlab, Bitbucket, custom) but you&rsquo;ll have to modify the provided example commands."><meta itemprop=datePublished content="2021-02-19T00:00:00+00:00"><meta itemprop=dateModified content="2021-02-19T15:39:36+01:00"><meta itemprop=wordCount content="1678"><meta itemprop=image content="https://blog.sldk.de"><meta itemprop=keywords content="fluxcd,gitops,kubernetes,devops,kustomize,"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://blog.sldk.de"><meta name=twitter:title content="Introduction to GitOps with Flux v2"><meta name=twitter:description content="Today we&rsquo;re having a look at how to set up a GitOps pipeline for your Kubernetes cluster with Flux v2.
+We will first go through some core concepts of Flux and then create our first GitOps workflow.
+You will need access to a Kubernetes cluster, a shell interface and a Github account to follow this guide. Note that you can use any git provider (Gitlab, Bitbucket, custom) but you&rsquo;ll have to modify the provided example commands."><meta property="article:published_time" content="2021-02-19 00:00:00 +0000 UTC"></head><body><div class=container><header class=header><span class=header__inner><a href=https://blog.sldk.de/ style=text-decoration:none><div class=logo><span class=logo__mark>></span>
+<span class=logo__text>$ cd /home/</span>
+<span class=logo__cursor></span></div></a><span class=header__right><nav class=menu><ul class=menu__inner><li><a href=https://blog.sldk.de/about>About</a></li><li><a href=https://blog.sldk.de/posts>Posts</a></li></ul></nav><span class=menu-trigger><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></span></span></span></header><div class=content><main class=post><div class=post-info><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>8 minutes</p></div><article><h1 class=post-title><a href=https://blog.sldk.de/2021/02/introduction-to-gitops-with-flux-v2/>Introduction to GitOps with Flux v2</a></h1><figure class=post-cover><img src=https://blog.sldk.de/img/posts/fluxcd/flux-horizontal-color.png alt="Introduction to GitOps with Flux v2"></figure><hr><aside id=toc><div class=toc-title>Table of Contents</div><nav id=TableOfContents><ul><li><a href=#what-is-gitops>What is GitOps?</a></li><li><a href=#what-is-flux-v2>What is Flux v2?</a></li><li><a href=#installing-flux-v2>Installing Flux v2</a></li><li><a href=#inspecting-the-flux-components->Inspecting the Flux components 🕵</a><ul><li><a href=#the-flux-system-namespace>The flux-system namespace</a></li><li><a href=#the-gitops-repository>The GitOps repository</a></li></ul></li><li><a href=#deploying-own-resources>Deploying own resources</a></li><li><a href=#summary>Summary</a></li></ul></nav></aside><hr><div class=post-content><p>Today we&rsquo;re having a look at how to set up a GitOps pipeline for your Kubernetes cluster with <a href=https://toolkit.fluxcd.io/>Flux v2</a>.</p><p>We will first go through some core concepts of Flux and then create our first GitOps workflow.</p><p>You will need access to a Kubernetes cluster, a shell interface and a Github account to follow this guide. Note that you
+can use any git provider (Gitlab, Bitbucket, custom) but you&rsquo;ll have to modify the provided example commands.</p><h2 id=what-is-gitops>What is GitOps?</h2><blockquote><p>GitOps is a way of managing your infrastructure and applications so that whole system is described declaratively and version controlled (most likely in a Git repository), and having an automated process that ensures that the deployed environment matches the state specified in a repository.</p></blockquote><p>In Kubernetes practice this means that <code>git</code> is used over <code>kubectl</code> (<code>helm</code>, etc) to perform operations tasks against the cluster.</p><p>Pushing to <code>master</code> triggers a deployment to the cluster. We can work with branches and Merge Requests to diff and
+review changes to the desired cluster state. We can audit past cluster states with <code>git log</code>. We can rollback a change
+using <code>git revert</code>.</p><h2 id=what-is-flux-v2>What is Flux v2?</h2><p>Flux v2 is a Toolkit for building GitOps workflows on Kubernetes.</p><p>In simplified terms, Flux v2 is deployed to a Kubernetes cluster and configured to watch git repositories containing
+Kubernetes manifests.</p><p><img src=https://blog.sldk.de/img/posts/fluxcd/gitops-toolkit.png alt="GitOps Toolkit"></p><p>As Flux watches all our repos and pulls the changes into the cluster, we can focus on writing our Kubernetes manifests.
+We don&rsquo;t have to worry about client-side tooling and pushing the changes from every git repo into the cluster.
+This is what GitOps is about.</p><p>We will come back to the individual Flux components once we&rsquo;ve installed them in the upcoming steps.</p><h2 id=installing-flux-v2>Installing Flux v2</h2><p>We&rsquo;ll follow the official docs and use the <code>flux</code> CLI tool.</p><p>You can install it with:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>curl -s https://toolkit.fluxcd.io/install.sh | sudo bash
+
+<span style=color:#75715e># enable completions in ~/.bash_profile</span>
+. &lt;<span style=color:#f92672>(</span>flux completion bash<span style=color:#f92672>)</span>
+</code></pre></div><p>The <code>flux bootstrap</code> command will ensure that:</p><ol><li>A new GitOps repository for our manifests is created on Github</li><li>A <code>flux-system</code> namespace with all Flux components is configured on our cluster</li><li>The Flux controllers are set up to sync with our new git repository</li></ol><p>ℹ️ Note that there&rsquo;s also <a href=https://toolkit.fluxcd.io/guides/installation/#bootstrap-with-terraform>Terraform Provider</a> as an alternative installation method.</p><p>The following snippet shows an annotated bootstrap command.
+Feel free to play around with <code>flux bootstrap --help</code> to get to know all available options.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>export GITHUB_TOKEN<span style=color:#f92672>=</span>&lt;your-gitlab-token-here&gt; <span style=color:#75715e># 1</span>
+
+flux bootstrap <span style=color:#ae81ff>\
+</span><span style=color:#ae81ff></span>  github <span style=color:#ae81ff>\ </span>                     <span style=color:#75715e># 2</span>
+  --owner &lt;your-github-user&gt; <span style=color:#ae81ff>\ </span> <span style=color:#75715e># 3</span>
+  --repository cluster-name <span style=color:#ae81ff>\ </span>  <span style=color:#75715e># 4</span>
+  --personal <span style=color:#ae81ff>\ </span>                 <span style=color:#75715e># 5</span>
+  --private <span style=color:#ae81ff>\ </span>                  <span style=color:#75715e># 6</span>
+  --path cluster <span style=color:#ae81ff>\ </span>             <span style=color:#75715e># 7</span>
+  --branch master               <span style=color:#75715e># 8</span>
+</code></pre></div><ol><li>We&rsquo;re going to need to give <code>flux</code> access to our Github account so that it can manage our GitOps repository on our behalf.
+You can generate a new Personal Access Token in <a href=https://github.com/settings/tokens>Github Settings</a>.</li><li>We need to tell Flux that we&rsquo;re using Github as git provider. You can also use Gitlab and generic git servers.</li><li>The Github username.</li><li>The name of our git repository.</li><li>(Optional) We&rsquo;re creating a personal Github repo.</li><li>(Optional) We&rsquo;re starting out with a private Github repo.</li><li>(Optional) A path inside the repository to be watched by Flux.</li><li>(Optional) The git branch to be watched by Flux.</li></ol><p>The bootstrap command is interactive and will let you know about the progress and state of the installation.</p><p>This is all you need to get up and running with Flux. Note that the boostrap command is idempotent
+and can also be used with an existing GitOps repository.</p><h2 id=inspecting-the-flux-components->Inspecting the Flux components 🕵</h2><h3 id=the-flux-system-namespace>The flux-system namespace</h3><p>Let&rsquo;s take a look at what was deployed to the k8s cluster for us.</p><pre class=command-line data-user=leo data-host=sldk.de data-filter-output=out:><code class=language-bash># Let&#39;s have a look at the Flux controllers...
+kubectl get pods -n flux-system
+out:NAME                                      READY   STATUS    RESTARTS   AGE
+out:helm-controller-c858b9c65-v8pgr           1/1     Running   28         17d
+out:kustomize-controller-6767b8fd78-8ptd4     1/1     Running   30         17d
+out:notification-controller-db467b4fb-pt9tc   1/1     Running   29         17d
+out:source-controller-7b4d748b45-2blvd        1/1     Running   28         17d
+# And the custom resource definitions...
+kubectl get crd -o name | grep flux
+out:customresourcedefinition.apiextensions.k8s.io/alerts.notification.toolkit.fluxcd.io
+out:customresourcedefinition.apiextensions.k8s.io/buckets.source.toolkit.fluxcd.io
+out:customresourcedefinition.apiextensions.k8s.io/gitrepositories.source.toolkit.fluxcd.io
+out:customresourcedefinition.apiextensions.k8s.io/helmcharts.source.toolkit.fluxcd.io
+out:customresourcedefinition.apiextensions.k8s.io/helmreleases.helm.toolkit.fluxcd.io
+out:customresourcedefinition.apiextensions.k8s.io/helmrepositories.source.toolkit.fluxcd.io
+out:customresourcedefinition.apiextensions.k8s.io/kustomizations.kustomize.toolkit.fluxcd.io
+out:customresourcedefinition.apiextensions.k8s.io/providers.notification.toolkit.fluxcd.io
+out:customresourcedefinition.apiextensions.k8s.io/receivers.notification.toolkit.fluxcd.io</code></pre><p>Great! The Flux controllers are running and we have a bunch of new CustomResourceDefinitions available to us.
+Read ahead to learn more about how those play together.</p><h3 id=the-gitops-repository>The GitOps repository</h3><p>To better understand how Flux works, let&rsquo;s now take a look at the directory structure of our bootstrapped GitOps
+repository on Github. We&rsquo;re going to see that the bootstrap command has created some Kubernetes yamls for us.</p><pre class=command-line data-user=leo data-host=sldk.de data-filter-output=out:><code class=language-bash>git clone git@github.com:${username}/cluster-name.git
+cd cluster-name
+tree
+out:.
+out:├── cluster
+out:│   └── flux-system
+out:│       ├── gotk-components.yaml
+out:│       ├── gotk-sync.yaml
+out:│       └── kustomization.yaml
+out:└── README.md
+out:
+out:2 directories, 4 files</code></pre><p>Cool. We&rsquo;ll go through the individual files.</p><h4 id=the-cluster-directory>The cluster directory</h4><p>This directory was created because we used <code>flux bootstrap ... --path cluster ...</code> during bootstrapping.
+We&rsquo;ll see in a second that this folder is also special because it&rsquo;s being watched by the Flux <code>kustomization-controller</code>.</p><p>Any Kubernetes yaml that we throw in this directory will be deployed to our cluster. It also means that we can have
+different files and directories in our repository that will never make it to the cluster. This is useful because we could
+have one single git repository for our infrastructure declarations and divide it into sub-paths for different k8s clusters
+or environments. For example, we could bootstrap multiple Flux environments and use paths like
+<code>dev-cluster</code>, <code>stage-cluster</code>, <code>prod-cluster</code>.</p><p>That&rsquo;s just one way to organize. It&rsquo;s nice that we have this flexibility.</p><h4 id=the-flux-system-directory>The flux-system directory</h4><p>This directory represents the <code>flux-system</code> k8s namespace and contains Kubernetes declarations.</p><p>I like to continue this pattern and create a subdirectory for each namespace that I deploy with Flux.</p><p>Example:</p><pre><code>└── cluster
+    ├── flux-system
+    ├── monitoring
+    ├── cool-app-namespace
+    └── monitoring
+</code></pre><p>This isn&rsquo;t required. You&rsquo;re flexible and can structure the <code>/cluster</code> directory like you want!</p><h4 id=kustomizationyaml>kustomization.yaml</h4><p>As we can see Flux created a simple <code>kustomization.yaml</code> for us. If you&rsquo;re not familiar with <a href=https://kustomize.io/>Kustomize</a>
+you can just ignore this for now. All it does is include the other two files in the <code>cluster/flux-system</code> directory.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#75715e># cluster/flux-system/kustomization.yaml</span>
+<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>kustomize.config.k8s.io/v1beta1</span>
+<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Kustomization</span>
+<span style=color:#f92672>resources</span>:
+- <span style=color:#ae81ff>gotk-components.yaml</span>
+- <span style=color:#ae81ff>gotk-sync.yaml</span>
+</code></pre></div><h4 id=gotk-componentsyaml>gotk-components.yaml</h4><p>This file contains the <strong>G</strong>it<strong>O</strong>ps <strong>T</strong>ool<strong>K</strong>it components 🤯 -
+in here you will find the <em>Deployments</em> and <em>Services</em> for the Flux controllers and all the <em>CustomResourceDefinitions</em>
+that we&rsquo;ve already seen when we inspected the <code>flux-system</code> namespace.</p><p>This file is generated by the <code>flux bootstrap</code> command and you shouldn&rsquo;t have to deal with it manually.</p><h4 id=gotk-syncyaml>gotk-sync.yaml</h4><p>The file <code>gotk-sync.yaml</code> is more interesting to us. This file declares our first two custom resources for Flux.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#75715e># cluster/flux-system/gotk-sync.yaml</span>
+---
+<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>source.toolkit.fluxcd.io/v1beta1</span>
+<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>GitRepository</span>
+<span style=color:#f92672>metadata</span>:
+  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>flux-system</span>
+  <span style=color:#f92672>namespace</span>: <span style=color:#ae81ff>flux-system</span>
+<span style=color:#f92672>spec</span>:
+  <span style=color:#f92672>interval</span>: <span style=color:#ae81ff>1m0s</span>
+  <span style=color:#f92672>ref</span>:
+    <span style=color:#f92672>branch</span>: <span style=color:#ae81ff>master</span>
+  <span style=color:#f92672>secretRef</span>:
+    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>flux-system</span>
+  <span style=color:#f92672>url</span>: <span style=color:#ae81ff>ssh://git@github.com/your-user-name-here/cluster-name</span>
+---
+<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>kustomize.toolkit.fluxcd.io/v1beta1</span>
+<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Kustomization</span>
+<span style=color:#f92672>metadata</span>:
+  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>flux-system</span>
+  <span style=color:#f92672>namespace</span>: <span style=color:#ae81ff>flux-system</span>
+<span style=color:#f92672>spec</span>:
+  <span style=color:#f92672>interval</span>: <span style=color:#ae81ff>10m0s</span>
+  <span style=color:#f92672>path</span>: <span style=color:#ae81ff>./cluster</span>
+  <span style=color:#f92672>prune</span>: <span style=color:#66d9ef>true</span>
+  <span style=color:#f92672>sourceRef</span>:
+    <span style=color:#f92672>kind</span>: <span style=color:#ae81ff>GitRepository</span>
+    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>flux-system</span>
+  <span style=color:#f92672>validation</span>: <span style=color:#ae81ff>client</span>
+</code></pre></div><p>Let&rsquo;s take a closer look at these two&mldr;</p><h4 id=the-flux-system-gitrepository>The flux-system GitRepository</h4><p>The first custom resource is of type <em>GitRepository</em>. A GitRepository is one of the possible <em>Sources</em> that are picked
+up by the Flux <code>source-controller</code>.
+Once a repository is registered with this controller, the Flux toolkit is able to watch it for changes
+and notify other Flux controllers to apply the contents to the cluster.</p><p>This specific GitRepository definition tells Flux to check the <code>master</code> branch of our new GitOps repository
+at <code>ssh://git@github.com/${username}/cluster-name</code> every <code>1m0s</code> using a <code>flux-system</code> secret for authentication
+(this secret contains your Github Personal Access Token that we created during bootstrapping).</p><p>Note that we could create more GitRepository resources and effectively sync any number of GitOps repositories with our
+Flux-enabled cluster.</p><p>Example use-case: You have multiple teams that want to deploy to one cluster. You want each team to maintain their own
+infrastructure repository. You could set up Flux on the cluster such that it pulls each team&rsquo;s repository.</p><p>Read more in the <a href=https://toolkit.fluxcd.io/components/source/gitrepositories/>Flux Docs</a>.</p><h4 id=the-flux-system-kustomization>The flux-system Kustomization</h4><p>The second custom resource in this file is a (Flux-) <strong>Kustomization</strong>.</p><p>⚠️ Not to be confused with a <a href=https://kustomize.io/><strong>Kustomize</strong> resource</a>.</p><p>A Flux Kustomization describes a <em>path</em> inside of a <em>Source</em> that Flux should apply to the cluster. It&rsquo;s assumed
+that there are Kubernetes yamls and/or Kustomize yamls located in the directory at the named path.</p><p>The Flux <code>kustomize-controller</code> is going to periodically apply the yamls at the given location to our cluster.</p><p>Here&rsquo;s a simplified walk-through of how the <code>kustomize-controller</code> is going to install our k8s resources.</p><ul><li>Checkout the configured branch from <code>ssh://git@github.com/${username}/cluster-name</code></li><li>Change the working directory to the specified path: <code>./cluster</code></li><li>Build a root <code>Kustomize</code> yaml at this location if no explicit one is available:<pre><code>kustomize create --autodetect --recursive &gt; kustomization.yaml
+</code></pre></li><li>Apply the result:<pre><code>kubectl apply -k kustomization.yaml`
+</code></pre></li></ul><p>I think it&rsquo;s good to know how <code>kustomize</code> is being used to build the final Kubernetes manifest from our GitOps repo.
+The commands above can be used for testing locally. This is especially helpful when you mix plain Kubernetes yamls with
+Kustomize yamls as this has an impact on the recursive auto-detection.</p><h2 id=deploying-own-resources>Deploying own resources</h2><p>Let&rsquo;s do a really simple example on how to deploy stuff to our cluster.</p><p>All we want to do is create a new namespace &ldquo;awesome-namespace&rdquo;.</p><pre class=command-line data-user=leo data-host=sldk.de data-filter-output=out:><code class=language-bash># Create a new directory for our namespace
+mkdir cluster/awesome-namespace
+
+# Create the Kubernetes namespace descriptor
+cat &lt;&lt;EOF &gt; cluster/awesome-namespace/namespace.yaml
+out:---
+out:apiVersion: v1
+out:kind: Namespace
+out:metadata:
+out:name: awesome-namespace
+out:EOF
+
+# Commit and push the change
+git add .
+git commit -m &#34;Add &#39;awesome-namespace&#39;&#34;
+git push</code></pre><p>Lean back and watch as the new namespace is shipped to our cluster 🛳️</p><hr><h2 id=summary>Summary</h2><p>We installed the Flux GitOps toolkit to a Kubernetes cluster and deployed a Kubernetes manifest by only using <code>git</code>.
+Along the way we learnt about the Flux components.</p><p>I hope this gave you an introduction on what Flux v2 is, how it works and how you can use it to enhance your CI/CD workflows.</p><p>I&rsquo;m planning to write more about this topic in the future. We&rsquo;ll take a look at how to
+integrate <a href=https://github.com/mozilla/sops>SOPS</a> for secret handling, how to deploy
+<a href=https://toolkit.fluxcd.io/components/source/helmcharts/>Helm Charts</a> and how to set up Flux notifications.</p><p>If you read this far, please hit me up in the comments, on <a href=https://twitter.com/sladkovik>Twitter</a> or <a href=https://www.instagram.com/sladkoff2/>Instagram</a> to let me know how I did.</p><p>Thanks 🙏</p></div></article><hr><div class=post-info><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg><span class=tag><a href=https://blog.sldk.de/tags/fluxcd/>fluxcd</a></span>
+<span class=tag><a href=https://blog.sldk.de/tags/gitops/>gitops</a></span>
+<span class=tag><a href=https://blog.sldk.de/tags/kubernetes/>kubernetes</a></span>
+<span class=tag><a href=https://blog.sldk.de/tags/devops/>devops</a></span>
+<span class=tag><a href=https://blog.sldk.de/tags/kustomize/>kustomize</a></span></p><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6A2 2 0 004 4v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>1678 Words</p><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2021-02-19 00:00 +0000
+(Last updated: 2021-02-19 14:39 +0000)</p><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-git-commit"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg><a href=https://github.com/sladkoff/sladkoff.github.io/commit/565a46fe49d7ea6a6a11bbcb33cd872d3e7b7dd6 target=_blank rel=noopener>565a46f</a>
+@ 2021-02-19</p></div><div class=pagination><div class=pagination__title><span class=pagination__title-h></span><hr></div><div class=pagination__buttons><span class="button next"><a href=https://blog.sldk.de/2021/02/how-i-build-my-resume-from-markdown/><span class=button__text>How I build my resume from Markdown</span>
+<span class=button__icon>→</span></a></span></div></div><div id=comments><div id=disqus_thread></div><script type=application/javascript>var disqus_config=function(){};(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('disqus_thread').innerHTML='Disqus comments not available by default when the website is previewed locally.';return;}
+var d=document,s=d.createElement('script');s.async=true;s.src='//'+"blog-sldk-de"+'.disqus.com/embed.js';s.setAttribute('data-timestamp',+new Date());(d.head||d.body).appendChild(s);})();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></main></div><footer class=footer><div class=footer__inner><div class=footer__content><span>&copy; 2021</span>
+<span><a href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank rel=noopener>CC BY-NC 4.0</a></span><span><a href=https://blog.sldk.de/posts/index.xml target=_blank title=rss><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a></span></div></div><div class=footer__inner><div class=footer__content><span>Powered by <a href=http://gohugo.io>Hugo</a></span>
+<span>Made with &#10084; by <a href=https://github.com/rhazdon>Djordje Atlialp</a></span></div></div></footer></div><script type=text/javascript src=https://blog.sldk.de/bundle.min.af435e44374f1e99a669ea8cd5bb9a2fceed80588941a451bfddb66b86a67c9f40b0f417e9543a763f809aa7e9300d7b1d69bf99615810ba02ac70396d50fad5.js integrity="sha512-r0NeRDdPHpmmaeqM1buaL87tgFiJQaRRv922a4amfJ9AsPQX6VQ6dj+AmqfpMA17HWm/mWFYELoCrHA5bVD61Q=="></script><script async src="https://www.googletagmanager.com/gtag/js?id=G-4S8T5XN1Q2"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());gtag('config','G-4S8T5XN1Q2');</script><script src=https://blog.sldk.de/js/prism.js></script></body></html>
