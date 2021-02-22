@@ -171,7 +171,7 @@ up by the Flux <code>source-controller</code>.
 Once a repository is registered with this controller, the Flux toolkit is able to watch it for changes
 and notify other Flux controllers to apply the contents to the cluster.</p>
 <p>This specific GitRepository definition tells Flux to check the <code>master</code> branch of our new GitOps repository
-at <code>ssh://git@github.com/${username}/cluster-name</code> every <code>1m0s</code> using a <code>flux-system</code> secret for authentication
+from <abbr title="ssh://git@github.com/${username}/cluster-name">Github</abbr>. every <code>1m0s</code> using a <code>flux-system</code> secret for authentication
 (this secret contains your Github Personal Access Token that we created during bootstrapping).</p>
 <p>Note that we could create more GitRepository resources and effectively sync any number of GitOps repositories with our
 Flux-enabled cluster.</p>
@@ -186,7 +186,9 @@ that there are Kubernetes yamls and/or Kustomize yamls located in the directory 
 <p>The Flux <code>kustomize-controller</code> is going to periodically apply the yamls at the given location to our cluster.</p>
 <p>Here&rsquo;s a simplified walk-through of how the <code>kustomize-controller</code> is going to install our k8s resources.</p>
 <ul>
-<li>Checkout the configured branch from <code>ssh://git@github.com/${username}/cluster-name</code></li>
+<li>Checkout the configured branch from
+<pre><code>ssh://git@github.com/${username}/cluster-name
+</code></pre></li>
 <li>Change the working directory to the specified path: <code>./cluster</code></li>
 <li>Build a root <code>Kustomize</code> yaml at this location if no explicit one is available:
 <pre><code>kustomize create --autodetect --recursive &gt; kustomization.yaml
