@@ -2,6 +2,7 @@
 title: Hosting static sites generated with Hugo
 date: "2020-01-25"
 comments: true
+buyMeACoffee: true
 tags: 
   - hugo
   - gitlab

@@ -6,8 +6,6 @@ theme        = "hello-friend-ng"
 paginate     = 10
 DefaultContentLanguage = "en"
 
-# Google Analytics
-googleAnalytics = "G-4S8T5XN1Q2"
 
 # Non-standard?
 disqusShortname = "blog-sldk-de"
@@ -51,6 +49,12 @@ enableEmoji     = true
 
   # Set disableReadOtherPosts to true in order to hide the links to other posts.
   disableReadOtherPosts = false
+  readOtherPosts = "Read More"
+
+  enableSharingButtons = false
+
+  # Google Analytics (Not from template, this is custom to use gtag)
+  GoogleAnalyticsTag = "G-4S8T5XN1Q2"
 
   # Integrate Javascript files or stylesheets by adding the url to the external assets or by
   # linking local files with their path relative to the static folder, e.g. "css/styles.css"
