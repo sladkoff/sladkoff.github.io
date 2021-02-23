@@ -8,14 +8,7 @@
 		data-position="Right" data-x_margin="18" data-y_margin="18"></script>
 {{- end }}
 
-{{- if .Site.Params.GoogleAnalyticsTag }}
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id={{.Site.Params.GoogleAnalyticsTag}}"></script>
-<script>
-	window.dataLayer = window.dataLayer || [];
-	function gtag(){dataLayer.push(arguments);}
-	gtag('js', new Date());
-
-	gtag('config', '{{.Site.Params.GoogleAnalyticsTag}}');
-</script>
+{{- if .Site.Params.GoatCounterUrl }}
+<script data-goatcounter="https://sldk.goatcounter.com/count"
+		async src="//gc.zgo.at/count.js"></script>
 {{- end }}
