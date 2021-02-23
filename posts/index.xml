@@ -212,7 +212,7 @@ out:---
 out:apiVersion: v1
 out:kind: Namespace
 out:metadata:
-out:name: awesome-namespace
+out:  name: awesome-namespace
 out:EOF
 
 # Commit and push the change
