@@ -1,4 +1,113 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Leonid Koftun</title><link>https://blog.sldk.de/posts/</link><description>Recent content in Posts on Leonid Koftun</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><copyright>&lt;a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0&lt;/a></copyright><lastBuildDate>Fri, 19 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://blog.sldk.de/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Introduction to GitOps on Kubernetes with Flux v2</title><link>https://blog.sldk.de/2021/02/introduction-to-gitops-on-kubernetes-with-flux-v2/</link><pubDate>Fri, 19 Feb 2021 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2021/02/introduction-to-gitops-on-kubernetes-with-flux-v2/</guid><description>Today we&amp;rsquo;re having a look at how to set up a GitOps pipeline for your Kubernetes cluster with Flux v2.
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Leonid Koftun</title><link>https://blog.sldk.de/posts/</link><description>Recent content in Posts on Leonid Koftun</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><copyright>&lt;a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0&lt;/a></copyright><lastBuildDate>Fri, 26 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://blog.sldk.de/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Setting up a Grafana Kiosk on a Raspberry Pi with Ansible</title><link>https://blog.sldk.de/2021/02/setting-up-a-grafana-kiosk-on-a-raspberry-pi-with-ansible/</link><pubDate>Fri, 26 Feb 2021 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2021/02/setting-up-a-grafana-kiosk-on-a-raspberry-pi-with-ansible/</guid><description>I was bored, I had a spare TV screen and a Raspberry Pi 3. I also love watching colorful charts on Grafana 📈
+As I&amp;rsquo;m currently learning about Ansible, I decided to write a playbook that sets up a Headless Raspberry Pi in Grafana Kiosk mode.
+This quick guide shows you how to create a Kiosk of your own.
+You&amp;rsquo;ll need:
+A Raspberry Pi with an empty SD card Ansible on your local machine A display or TV to connect to your Raspberry A Grafana instance that is reachable by the Raspberry Installing the OS I used the GUI rpi-imager to bootstrap my SD card with Raspberry Pi OS Lite (32bit) for my Raspberry.</description><content type="html"><![CDATA[<p>I was bored, I had a spare TV screen and a Raspberry Pi 3.
+I also love watching colorful charts on <a href="https://grafana.com/">Grafana</a> 📈</p>
+<p>As I&rsquo;m currently learning about <a href="https://www.ansible.com/">Ansible</a>,
+I decided to write a playbook that sets up a Headless Raspberry Pi in Grafana Kiosk mode.</p>
+<p>This quick guide shows you how to create a Kiosk of your own.</p>
+<p>You&rsquo;ll need:</p>
+<ul>
+<li>A Raspberry Pi with an empty SD card</li>
+<li>Ansible on your local machine</li>
+<li>A display or TV to connect to your Raspberry</li>
+<li>A Grafana instance that is reachable by the Raspberry</li>
+</ul>
+<h2 id="installing-the-os">Installing the OS</h2>
+<p>I used the GUI <a href="https://github.com/raspberrypi/rpi-imager">rpi-imager</a> to bootstrap my SD card with
+<strong>Raspberry Pi OS Lite (32bit)</strong> for my Raspberry. I think it&rsquo;s quick and easy and offers you some distro options
+to choose from.</p>
+<p>You can get the tool from the AUR if you&rsquo;re using Arch:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">yay -S rpi-imager
+</code></pre></div><p>Here&rsquo;s a screenshot of the GUI (select an image, select SD card, write!):</p>
+<p><img src="/img/posts/grafana-kiosk-ansible/rpi-imager-screenshot.png" alt="rpi-imager"></p>
+<p>To make the raspberry auto-connect to your WiFi on boot, create a new file <code>wpa_supplicant.conf</code> inside the <code>boot</code>
+directory of your flashed SD card with the following contents.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=&lt;Insert 2 letter ISO 3166-1 country code here&gt;
+
+network={
+ ssid=&#34;&lt;Name of your wireless LAN&gt;&#34;
+ psk=&#34;&lt;Password for your wireless LAN&gt;&#34;
+}
+</code></pre></div><p>To enable remote access over ssh after boot, create an empty file called <code>ssh</code> inside the <code>boot</code> directory as well.</p>
+<h2 id="installing-grafana-kiosk">Installing grafana-kiosk</h2>
+<p><a href="https://github.com/grafana/grafana-kiosk">grafana-kiosk</a> is a simple wrapper script that starts a fullscreen Chrome session
+and opens a configured Grafana URL with optional authentication.
+This Grafana URL usually points to a <a href="https://grafana.com/docs/grafana/latest/dashboards/playlist/">Grafana Playlist</a>
+which switches between different Grafana dashboards.</p>
+<p>I wrote a simple <a href="https://github.com/sladkoff/ansible-role-grafana-kiosk">Ansible role</a> to set up Headless Raspberry Pi Grafana Kiosks ™️.</p>
+<h3 id="ansible-playbook">Ansible Playbook</h3>
+<p>Here&rsquo;s my personal <a href="https://github.com/sladkoff/ansible-playbook-grafana-kiosk">Ansible playbook</a>.</p>
+<p>It assumes that you have a fresh Raspberry with no graphical environment. Like what we&rsquo;ve set up during &ldquo;<a href="#installing-the-os">Installing the OS</a>&rdquo;.</p>
+<p>The playbook will install and configure the following things to autostart on boot:</p>
+<ul>
+<li>openbox</li>
+<li>chromium</li>
+<li>grafana-kiosk</li>
+</ul>
+<p>To get started on your own RPI, you can fork <a href="https://github.com/sladkoff/ansible-playbook-grafana-kiosk">my repo</a> and
+apply at least the following changes:</p>
+<h4 id="rolesssh-keystasksmainyml">roles/ssh-keys/tasks/main.yml</h4>
+<p>This role contains tasks to disable password login via ssh and upload ssh keys to the RPI. You can either get rid of
+this if you don&rsquo;t need it or provide your own ssh keys:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e"># roles/ssh-keys/tasks/main.yml</span>
+---
+- <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Deploy SSH Key</span>
+  <span style="color:#f92672">ansible.posix.authorized_key</span>:
+    <span style="color:#f92672">user</span>: <span style="color:#ae81ff">pi</span>
+    <span style="color:#f92672">state</span>: <span style="color:#ae81ff">present</span>
+    <span style="color:#f92672">key</span>: <span style="color:#ae81ff">&lt;URL-OR-FILE-TO-YOUR-SSH-KEYS&gt;</span>
+    <span style="color:#f92672">validate_certs</span>: <span style="color:#66d9ef">False</span>
+  <span style="color:#f92672">notify</span>:
+    - <span style="color:#ae81ff">Restart sshd</span>
+
+- <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Disable Password Authentication</span>
+  <span style="color:#f92672">lineinfile</span>:
+    <span style="color:#f92672">dest</span>: <span style="color:#ae81ff">/etc/ssh/sshd_config</span>
+    <span style="color:#f92672">regexp</span>: <span style="color:#e6db74">&#39;^PasswordAuthentication&#39;</span>
+    <span style="color:#f92672">line</span>: <span style="color:#e6db74">&#34;PasswordAuthentication no&#34;</span>
+    <span style="color:#f92672">state</span>: <span style="color:#ae81ff">present</span>
+    <span style="color:#f92672">backup</span>: <span style="color:#66d9ef">yes</span>
+  <span style="color:#f92672">notify</span>:
+    - <span style="color:#ae81ff">Restart sshd</span>
+</code></pre></div><h4 id="hostsyaml">hosts.yaml</h4>
+<p>Provide the IP of your RPI in the <code>hosts.yaml</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e"># hosts.yaml</span>
+<span style="color:#f92672">grafana_kiosk</span>:
+  <span style="color:#f92672">hosts</span>:
+    <span style="color:#f92672">grafana_kiosk_rpi_tv</span>:
+      <span style="color:#f92672">ansible_host</span>: <span style="color:#e6db74">&#34;&lt;YOUR-RASPBERRY-IP-HERE&gt;&#34;</span>
+
+<span style="color:#f92672">all</span>:
+  <span style="color:#f92672">children</span>:
+    <span style="color:#f92672">grafana_kiosk</span>:
+</code></pre></div><h4 id="filesmy-grafana-kiosk-configyaml">files/my-grafana-kiosk-config.yaml</h4>
+<p>Provide a configuration for the grafana-kiosk utility script, this is where you specify the path to the Grafana instance
+and Playlist ID that you want to display on your kiosk:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e"># my-grafana-kiosk-config.yaml</span>
+<span style="color:#f92672">general</span>:
+  <span style="color:#f92672">kiosk-mode</span>: <span style="color:#ae81ff">full</span>
+  <span style="color:#f92672">autofit</span>: <span style="color:#66d9ef">true</span>
+  <span style="color:#f92672">lxde</span>: <span style="color:#66d9ef">false</span>
+
+<span style="color:#f92672">target</span>:
+  <span style="color:#f92672">login-method</span>: <span style="color:#ae81ff">local</span>
+  <span style="color:#f92672">username</span>: <span style="color:#ae81ff">pi-grafana-kiosk</span>
+  <span style="color:#f92672">password</span>: <span style="color:#ae81ff">pi-grafana-kiosk-password</span>
+  <span style="color:#f92672">playlist</span>: <span style="color:#66d9ef">true</span>
+  <span style="color:#f92672">URL</span>: <span style="color:#ae81ff">https://&lt;YOUR-GRAFANA-HOST-HERE&gt;/playlists/play/&lt;YOUR-GRAFANA-PLAYLIST-ID&gt;?kiosk&amp;autofitpanels</span>
+  <span style="color:#f92672">ignore-certificate-errors</span>: <span style="color:#66d9ef">false</span>
+
+</code></pre></div><p>⏯ Run the playbook in the repo directory</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ansible-galaxy install -r requirements.yaml
+ansible-playbook install-grafana-kiosk -i hosts.yaml --ask-pass
+</code></pre></div><p>You&rsquo;ll need to connecto the RPI to a screen and reboot it. If all went well, you should be greeted with your Grafana Playlist
+after booting.</p>
+<p>If there are still issues with my Ansible voodoo, feel free to create a PR on Github 😸</p>
+]]></content></item><item><title>Introduction to GitOps on Kubernetes with Flux v2</title><link>https://blog.sldk.de/2021/02/introduction-to-gitops-on-kubernetes-with-flux-v2/</link><pubDate>Fri, 19 Feb 2021 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2021/02/introduction-to-gitops-on-kubernetes-with-flux-v2/</guid><description>Today we&amp;rsquo;re having a look at how to set up a GitOps pipeline for your Kubernetes cluster with Flux v2.
 We will first go through some core concepts of Flux and then create our first GitOps workflow.
 You will need access to a Kubernetes cluster, a shell interface and a Github account to follow this guide. Note that you can use any git provider (Gitlab, Bitbucket, custom) but you&amp;rsquo;ll have to modify the provided example commands.</description><content type="html"><![CDATA[<p>Today we&rsquo;re having a look at how to set up a GitOps pipeline for your Kubernetes cluster with <a href="https://toolkit.fluxcd.io/">Flux v2</a>.</p>
 <p>We will first go through some core concepts of Flux and then create our first GitOps workflow.</p>

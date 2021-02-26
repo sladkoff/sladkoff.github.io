@@ -1,0 +1,91 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="ie=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=author content><meta name=description content="I was bored, I had a spare TV screen and a Raspberry Pi 3. I also love watching colorful charts on Grafana 📈
+As I&amp;rsquo;m currently learning about Ansible, I decided to write a playbook that sets up a Headless Raspberry Pi in Grafana Kiosk mode.
+This quick guide shows you how to create a Kiosk of your own.
+You&amp;rsquo;ll need:
+ A Raspberry Pi with an empty SD card Ansible on your local machine A display or TV to connect to your Raspberry A Grafana instance that is reachable by the Raspberry  Installing the OS I used the GUI rpi-imager to bootstrap my SD card with Raspberry Pi OS Lite (32bit) for my Raspberry."><meta name=keywords content=",grafana,kiosk,raspberry,pi,ansible"><meta name=robots content="noodp"><meta name=theme-color content="#2ecc71"><link rel=canonical href=https://blog.sldk.de/2021/02/setting-up-a-grafana-kiosk-on-a-raspberry-pi-with-ansible/><title>Setting up a Grafana Kiosk on a Raspberry Pi with Ansible :: Leonid Koftun — Software Engineer</title><link href=https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css rel=stylesheet type=text/css><link rel=stylesheet href=https://blog.sldk.de/main.d7bdd8ee18bfbf4c605488a7e5b1b92cd980dfeed2bdaeab4dd5e931a7a78bc0.css><link rel=stylesheet type=text/css href=https://blog.sldk.de/css/prism.css><link rel=stylesheet type=text/css href=https://blog.sldk.de/css/style.css><meta itemprop=name content="Setting up a Grafana Kiosk on a Raspberry Pi with Ansible"><meta itemprop=description content="I was bored, I had a spare TV screen and a Raspberry Pi 3. I also love watching colorful charts on Grafana 📈
+As I&rsquo;m currently learning about Ansible, I decided to write a playbook that sets up a Headless Raspberry Pi in Grafana Kiosk mode.
+This quick guide shows you how to create a Kiosk of your own.
+You&rsquo;ll need:
+ A Raspberry Pi with an empty SD card Ansible on your local machine A display or TV to connect to your Raspberry A Grafana instance that is reachable by the Raspberry  Installing the OS I used the GUI rpi-imager to bootstrap my SD card with Raspberry Pi OS Lite (32bit) for my Raspberry."><meta itemprop=datePublished content="2021-02-26T00:00:00+00:00"><meta itemprop=dateModified content="2021-02-26T08:20:15+01:00"><meta itemprop=wordCount content="556"><meta itemprop=image content="https://blog.sldk.de"><meta itemprop=keywords content="grafana,kiosk,raspberry,pi,ansible,"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://blog.sldk.de"><meta name=twitter:title content="Setting up a Grafana Kiosk on a Raspberry Pi with Ansible"><meta name=twitter:description content="I was bored, I had a spare TV screen and a Raspberry Pi 3. I also love watching colorful charts on Grafana 📈
+As I&rsquo;m currently learning about Ansible, I decided to write a playbook that sets up a Headless Raspberry Pi in Grafana Kiosk mode.
+This quick guide shows you how to create a Kiosk of your own.
+You&rsquo;ll need:
+ A Raspberry Pi with an empty SD card Ansible on your local machine A display or TV to connect to your Raspberry A Grafana instance that is reachable by the Raspberry  Installing the OS I used the GUI rpi-imager to bootstrap my SD card with Raspberry Pi OS Lite (32bit) for my Raspberry."><meta property="article:published_time" content="2021-02-26 00:00:00 +0000 UTC"><script data-name=BMC-Widget data-cfasync=false src=https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js data-id=sldk data-description="Support me on Buy me a coffee!" data-message data-color=#f05f70 data-position=Right data-x_margin=18 data-y_margin=18></script><script data-goatcounter=https://sldk.goatcounter.com/count async src=//gc.zgo.at/count.js></script></head><body><div class=container><header class=header><span class=header__inner><a href=https://blog.sldk.de/ style=text-decoration:none><div class=logo><span class=logo__mark>></span>
+<span class=logo__text>$ cd /home/</span>
+<span class=logo__cursor></span></div></a><span class=header__right><nav class=menu><ul class=menu__inner><li><a href=https://blog.sldk.de/about>About</a></li><li><a href=https://blog.sldk.de/posts>Posts</a></li></ul></nav><span class=menu-trigger><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></span></span></span></header><div class=content><main class=post><div class=post-info><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>3 minutes</p></div><article><h1 class=post-title><a href=https://blog.sldk.de/2021/02/setting-up-a-grafana-kiosk-on-a-raspberry-pi-with-ansible/>Setting up a Grafana Kiosk on a Raspberry Pi with Ansible</a></h1><div class=post-content><p>I was bored, I had a spare TV screen and a Raspberry Pi 3.
+I also love watching colorful charts on <a href=https://grafana.com/>Grafana</a> 📈</p><p>As I&rsquo;m currently learning about <a href=https://www.ansible.com/>Ansible</a>,
+I decided to write a playbook that sets up a Headless Raspberry Pi in Grafana Kiosk mode.</p><p>This quick guide shows you how to create a Kiosk of your own.</p><p>You&rsquo;ll need:</p><ul><li>A Raspberry Pi with an empty SD card</li><li>Ansible on your local machine</li><li>A display or TV to connect to your Raspberry</li><li>A Grafana instance that is reachable by the Raspberry</li></ul><h2 id=installing-the-os>Installing the OS</h2><p>I used the GUI <a href=https://github.com/raspberrypi/rpi-imager>rpi-imager</a> to bootstrap my SD card with
+<strong>Raspberry Pi OS Lite (32bit)</strong> for my Raspberry. I think it&rsquo;s quick and easy and offers you some distro options
+to choose from.</p><p>You can get the tool from the AUR if you&rsquo;re using Arch:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>yay -S rpi-imager
+</code></pre></div><p>Here&rsquo;s a screenshot of the GUI (select an image, select SD card, write!):</p><p><img src=https://blog.sldk.de/img/posts/grafana-kiosk-ansible/rpi-imager-screenshot.png alt=rpi-imager></p><p>To make the raspberry auto-connect to your WiFi on boot, create a new file <code>wpa_supplicant.conf</code> inside the <code>boot</code>
+directory of your flashed SD card with the following contents.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-text data-lang=text>ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=&lt;Insert 2 letter ISO 3166-1 country code here&gt;
+
+network={
+ ssid=&#34;&lt;Name of your wireless LAN&gt;&#34;
+ psk=&#34;&lt;Password for your wireless LAN&gt;&#34;
+}
+</code></pre></div><p>To enable remote access over ssh after boot, create an empty file called <code>ssh</code> inside the <code>boot</code> directory as well.</p><h2 id=installing-grafana-kiosk>Installing grafana-kiosk</h2><p><a href=https://github.com/grafana/grafana-kiosk>grafana-kiosk</a> is a simple wrapper script that starts a fullscreen Chrome session
+and opens a configured Grafana URL with optional authentication.
+This Grafana URL usually points to a <a href=https://grafana.com/docs/grafana/latest/dashboards/playlist/>Grafana Playlist</a>
+which switches between different Grafana dashboards.</p><p>I wrote a simple <a href=https://github.com/sladkoff/ansible-role-grafana-kiosk>Ansible role</a> to set up Headless Raspberry Pi Grafana Kiosks ™️.</p><h3 id=ansible-playbook>Ansible Playbook</h3><p>Here&rsquo;s my personal <a href=https://github.com/sladkoff/ansible-playbook-grafana-kiosk>Ansible playbook</a>.</p><p>It assumes that you have a fresh Raspberry with no graphical environment. Like what we&rsquo;ve set up during &ldquo;<a href=#installing-the-os>Installing the OS</a>&rdquo;.</p><p>The playbook will install and configure the following things to autostart on boot:</p><ul><li>openbox</li><li>chromium</li><li>grafana-kiosk</li></ul><p>To get started on your own RPI, you can fork <a href=https://github.com/sladkoff/ansible-playbook-grafana-kiosk>my repo</a> and
+apply at least the following changes:</p><h4 id=rolesssh-keystasksmainyml>roles/ssh-keys/tasks/main.yml</h4><p>This role contains tasks to disable password login via ssh and upload ssh keys to the RPI. You can either get rid of
+this if you don&rsquo;t need it or provide your own ssh keys:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#75715e># roles/ssh-keys/tasks/main.yml</span>
+---
+- <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Deploy SSH Key</span>
+  <span style=color:#f92672>ansible.posix.authorized_key</span>:
+    <span style=color:#f92672>user</span>: <span style=color:#ae81ff>pi</span>
+    <span style=color:#f92672>state</span>: <span style=color:#ae81ff>present</span>
+    <span style=color:#f92672>key</span>: <span style=color:#ae81ff>&lt;URL-OR-FILE-TO-YOUR-SSH-KEYS&gt;</span>
+    <span style=color:#f92672>validate_certs</span>: <span style=color:#66d9ef>False</span>
+  <span style=color:#f92672>notify</span>:
+    - <span style=color:#ae81ff>Restart sshd</span>
+
+- <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Disable Password Authentication</span>
+  <span style=color:#f92672>lineinfile</span>:
+    <span style=color:#f92672>dest</span>: <span style=color:#ae81ff>/etc/ssh/sshd_config</span>
+    <span style=color:#f92672>regexp</span>: <span style=color:#e6db74>&#39;^PasswordAuthentication&#39;</span>
+    <span style=color:#f92672>line</span>: <span style=color:#e6db74>&#34;PasswordAuthentication no&#34;</span>
+    <span style=color:#f92672>state</span>: <span style=color:#ae81ff>present</span>
+    <span style=color:#f92672>backup</span>: <span style=color:#66d9ef>yes</span>
+  <span style=color:#f92672>notify</span>:
+    - <span style=color:#ae81ff>Restart sshd</span>
+</code></pre></div><h4 id=hostsyaml>hosts.yaml</h4><p>Provide the IP of your RPI in the <code>hosts.yaml</code>:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#75715e># hosts.yaml</span>
+<span style=color:#f92672>grafana_kiosk</span>:
+  <span style=color:#f92672>hosts</span>:
+    <span style=color:#f92672>grafana_kiosk_rpi_tv</span>:
+      <span style=color:#f92672>ansible_host</span>: <span style=color:#e6db74>&#34;&lt;YOUR-RASPBERRY-IP-HERE&gt;&#34;</span>
+
+<span style=color:#f92672>all</span>:
+  <span style=color:#f92672>children</span>:
+    <span style=color:#f92672>grafana_kiosk</span>:
+</code></pre></div><h4 id=filesmy-grafana-kiosk-configyaml>files/my-grafana-kiosk-config.yaml</h4><p>Provide a configuration for the grafana-kiosk utility script, this is where you specify the path to the Grafana instance
+and Playlist ID that you want to display on your kiosk:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#75715e># my-grafana-kiosk-config.yaml</span>
+<span style=color:#f92672>general</span>:
+  <span style=color:#f92672>kiosk-mode</span>: <span style=color:#ae81ff>full</span>
+  <span style=color:#f92672>autofit</span>: <span style=color:#66d9ef>true</span>
+  <span style=color:#f92672>lxde</span>: <span style=color:#66d9ef>false</span>
+
+<span style=color:#f92672>target</span>:
+  <span style=color:#f92672>login-method</span>: <span style=color:#ae81ff>local</span>
+  <span style=color:#f92672>username</span>: <span style=color:#ae81ff>pi-grafana-kiosk</span>
+  <span style=color:#f92672>password</span>: <span style=color:#ae81ff>pi-grafana-kiosk-password</span>
+  <span style=color:#f92672>playlist</span>: <span style=color:#66d9ef>true</span>
+  <span style=color:#f92672>URL</span>: <span style=color:#ae81ff>https://&lt;YOUR-GRAFANA-HOST-HERE&gt;/playlists/play/&lt;YOUR-GRAFANA-PLAYLIST-ID&gt;?kiosk&amp;autofitpanels</span>
+  <span style=color:#f92672>ignore-certificate-errors</span>: <span style=color:#66d9ef>false</span>
+
+</code></pre></div><p>⏯ Run the playbook in the repo directory</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>ansible-galaxy install -r requirements.yaml
+ansible-playbook install-grafana-kiosk -i hosts.yaml --ask-pass
+</code></pre></div><p>You&rsquo;ll need to connecto the RPI to a screen and reboot it. If all went well, you should be greeted with your Grafana Playlist
+after booting.</p><p>If there are still issues with my Ansible voodoo, feel free to create a PR on Github 😸</p></div></article><hr><div class=post-info><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg><span class=tag><a href=https://blog.sldk.de/tags/grafana/>grafana</a></span>
+<span class=tag><a href=https://blog.sldk.de/tags/kiosk/>kiosk</a></span>
+<span class=tag><a href=https://blog.sldk.de/tags/raspberry/>raspberry</a></span>
+<span class=tag><a href=https://blog.sldk.de/tags/pi/>pi</a></span>
+<span class=tag><a href=https://blog.sldk.de/tags/ansible/>ansible</a></span></p><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6A2 2 0 004 4v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>556 Words</p><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2021-02-26 00:00 +0000
+(Last updated: 2021-02-26 07:20 +0000)</p><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-git-commit"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg><a href=https://github.com/sladkoff/sladkoff.github.io/commit/db92366b788e551881c07e481fcc07db4e5ea090 target=_blank rel=noopener>db92366</a>
+@ 2021-02-26</p></div><div class=pagination><div class=pagination__title><span class=pagination__title-h>Read More</span><hr></div><div class=pagination__buttons><span class="button next"><a href=https://blog.sldk.de/2021/02/introduction-to-gitops-on-kubernetes-with-flux-v2/><span class=button__text>Introduction to GitOps on Kubernetes with Flux v2</span>
+<span class=button__icon>→</span></a></span></div></div><div id=comments><div id=disqus_thread></div><script type=application/javascript>var disqus_config=function(){};(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('disqus_thread').innerHTML='Disqus comments not available by default when the website is previewed locally.';return;}
+var d=document,s=d.createElement('script');s.async=true;s.src='//'+"blog-sldk-de"+'.disqus.com/embed.js';s.setAttribute('data-timestamp',+new Date());(d.head||d.body).appendChild(s);})();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></main></div><footer class=footer><div class=footer__inner><div class=footer__content><span>&copy; 2021</span>
+<span><a href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank rel=noopener>CC BY-NC 4.0</a></span><span><a href=https://blog.sldk.de/posts/index.xml target=_blank title=rss><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a></span></div></div><div class=footer__inner><div class=footer__content><span>Powered by <a href=http://gohugo.io>Hugo</a></span>
+<span>Made with &#10084; by <a href=https://github.com/rhazdon>Djordje Atlialp</a></span></div></div></footer></div><script type=text/javascript src=https://blog.sldk.de/bundle.min.af435e44374f1e99a669ea8cd5bb9a2fceed80588941a451bfddb66b86a67c9f40b0f417e9543a763f809aa7e9300d7b1d69bf99615810ba02ac70396d50fad5.js integrity="sha512-r0NeRDdPHpmmaeqM1buaL87tgFiJQaRRv922a4amfJ9AsPQX6VQ6dj+AmqfpMA17HWm/mWFYELoCrHA5bVD61Q=="></script><script src=https://blog.sldk.de/js/prism.js></script></body></html>
