@@ -1,4 +1,194 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Leonid Koftun</title><link>https://blog.sldk.de/posts/</link><description>Recent content in Posts on Leonid Koftun</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><copyright>&lt;a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0&lt;/a></copyright><lastBuildDate>Fri, 26 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://blog.sldk.de/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Setting up a Grafana Kiosk on a Raspberry Pi with Ansible</title><link>https://blog.sldk.de/2021/02/setting-up-a-grafana-kiosk-on-a-raspberry-pi-with-ansible/</link><pubDate>Fri, 26 Feb 2021 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2021/02/setting-up-a-grafana-kiosk-on-a-raspberry-pi-with-ansible/</guid><description>I was bored, I had a spare TV screen and a Raspberry Pi 3. I also love watching colorful charts on Grafana 📈
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Leonid Koftun</title><link>https://blog.sldk.de/posts/</link><description>Recent content in Posts on Leonid Koftun</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><copyright>&lt;a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0&lt;/a></copyright><lastBuildDate>Wed, 03 Mar 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://blog.sldk.de/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Handling secrets in Flux v2 repositories with SOPS</title><link>https://blog.sldk.de/2021/03/handling-secrets-in-flux-v2-repositories-with-sops/</link><pubDate>Wed, 03 Mar 2021 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2021/03/handling-secrets-in-flux-v2-repositories-with-sops/</guid><description>This is part 2 of my series on &amp;ldquo;GitOps with Flux v2&amp;rdquo;.
+If you&amp;rsquo;re not familiar with what Flux is and how it helps you build GitOps workflows on Kubernetes, feel free to read part 1 here: &amp;ldquo;Introduction to GitOps on Kubernetes with Flux v2&amp;rdquo;.
+In today&amp;rsquo;s guide we will look at Mozilla SOPS and learn how to incorporate it with Flux v2 to store encrypted secrets in our GitOps repositories and have Flux decrypt them automatically during deployments.</description><content type="html"><![CDATA[<p>This is part 2 of my series on &ldquo;GitOps with Flux v2&rdquo;.</p>
+<p>If you&rsquo;re not familiar with what Flux is and how it helps you build GitOps workflows on Kubernetes, feel free to read
+part 1 here: <a href="https://blog.sldk.de/2021/02/introduction-to-gitops-on-kubernetes-with-flux-v2/">&ldquo;Introduction to GitOps on Kubernetes with Flux v2&rdquo;</a>.</p>
+<p>In today&rsquo;s guide we will look at <a href="https://github.com/mozilla/sops">Mozilla SOPS</a> and learn how to incorporate it with
+<a href="https://toolkit.fluxcd.io/">Flux v2</a> to store
+encrypted secrets in our GitOps repositories and have Flux decrypt them automatically during deployments.</p>
+<p>To follow along, you will need access to a Flux-enabled Kubernetes cluster.</p>
+<h2 id="introduction-to-sops">Introduction to SOPS</h2>
+<p>If SOPS is old news to you, you can skip ahead to <a href="#enabling-sops-in-flux-v2">&ldquo;Enabling SOPS in Flux v2&rdquo;</a> ⏩</p>
+<p>Suppose you want to store a database password in a Kubernetes yaml and check that in to source control.</p>
+<p>You could base64-encode the password and upload it to a <strong>private</strong> git repository that only your team has access to&hellip;
+If your repository is compromised, the attacker could easily read the password
+without any further measures in place to protect it. That&rsquo;s where SOPS comes in.</p>
+<p>SOPS stands for &ldquo;<strong>S</strong>ecrets <strong>OP</strong>eration<strong>S</strong>&rdquo;.
+SOPS allows us to <em>encrypt</em> and <em>decrypt</em> certain parts of our Kubernetes yamls with <a href="https://en.wikipedia.org/wiki/Pretty_Good_Privacy">PGP</a>. This means
+that we can even make our yaml declarations containing secret data public and not worry about unauthorized parties
+peeking into the contents of the secret values because they would require the respective PGP private
+keys to decrypt the data.</p>
+<p>ℹ️ Note that SOPS can also handle different file formats (JSON, ENV, INI, etc). In the Kubernetes context, we mainly use it with yaml files as that&rsquo;s what we work with most of the time.</p>
+<h3 id="sops-basics">SOPS basics</h3>
+<p>In this section we&rsquo;ll learn how to use SOPS on your local machine.</p>
+<p>First you&rsquo;ll have to create a PGP key with OpenGPG. The following command will guide you through the creation process.</p>
+<pre class="command-line" data-user="leo" data-host="sldk.de" data-filter-output="out:"><code class="language-bash">gpg --full-generate-key</code></pre>
+<p>⚠️ Make sure <strong>not</strong> to specify a passphrase in the prompt if you&rsquo;re going to use this key with Flux.
+You can use the default selections for most other parameters and just supply your ID information (name + email).</p>
+<p>Verify that the PGP key pair was created and note the secret ID:</p>
+<pre class="command-line" data-user="leo" data-host="sldk.de" data-filter-output="out:"><code class="language-bash">gpg --list-secret-keys ${your_email_address}
+out:sec   rsa4096 2021-02-04 [SC]
+out:CFF53C2B937EAFD676F75C48F70573E9355BF63B
+out:uid           [ultimate] Leonid Koftun &lt;leonid.koftun@gmail.com&gt;
+out:ssb   rsa4096 2021-02-04 [E]</code></pre>
+<p>Let&rsquo;s create a simple Kubernetes secret yaml to demonstrate how to use SOPS with the new GPG key.</p>
+<pre class="command-line" data-user="leo" data-host="sldk.de" data-filter-output="out:"><code class="language-bash">cat &lt;&lt;EOF &gt; secret.yaml
+out:apiVersion: v1
+out:kind: Secret
+out:metadata:
+out:    name: my-database-secret
+out:    namespace: awesome-namespace
+out:stringData:
+out:    database-password: Password123
+out:EOF</code></pre>
+<p>Now we&rsquo;ll create a SOPS config file in our working directory.</p>
+<pre class="command-line" data-user="leo" data-host="sldk.de" data-filter-output="out:"><code class="language-bash">cat &lt;&lt;EOF &gt; .sops.yaml
+out:---
+out:creation_rules:
+out:- encrypted_regex: &#39;^(data|stringData)$&#39;
+out:  pgp: &gt;-
+out:    CFF53C2B937EAFD676F75C48F70573E9355BF63B
+out:EOF</code></pre>
+<p>This configuration tells SOPS to only encrypt values under the &lsquo;data&rsquo; and &lsquo;stringData&rsquo; keys inside of yaml files and
+to use our previously generated PGP key for the actual encryption.</p>
+<p>We can now run sops:</p>
+<pre class="command-line" data-user="leo" data-host="sldk.de" data-filter-output="out:"><code class="language-bash"># You can encrypt the file in-place
+sops --encrypt --in-place secret.yaml
+# Or write to a new file
+sops --encrypt secret.yaml &gt; encrypted-secret.yaml</code></pre>
+<p>The result of the encrypted yaml will look like this:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Secret</span>
+<span style="color:#f92672">metadata</span>:
+    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">my-database-secret</span>
+    <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">awesome-namespace</span>
+<span style="color:#f92672">stringData</span>:
+    <span style="color:#f92672">database-password</span>: <span style="color:#ae81ff">ENC[AES256_GCM,data:k8GGkwr4AE/CdlM=,iv:tecWFmg0INNY1vRfpdGLsDc+APd6UmKk6AS//U0OjI4=,tag:EEm7DHO7muNgpLOwUZh1Lw==,type:str]</span>
+<span style="color:#f92672">sops</span>:
+    <span style="color:#f92672">kms</span>: []
+    <span style="color:#f92672">gcp_kms</span>: []
+    <span style="color:#f92672">azure_kv</span>: []
+    <span style="color:#f92672">hc_vault</span>: []
+    <span style="color:#f92672">lastmodified</span>: <span style="color:#e6db74">&#39;2021-02-22T21:45:13Z&#39;</span>
+    <span style="color:#f92672">mac</span>: <span style="color:#ae81ff">ENC[AES256_GCM,data:jhzW3o+XcFZgkvGzMb05GpM3hu1dmhRE74woFIeYQOtOy1jCXCp9WgyHar3XDp+1TkOOaN0myfRMe6uz/WmyyKXMPZNf5i4MlB053UUeL2RFMjaGjFlEgq7kG+aoke7+JVN3vTLCiP9fMb4aV3wfPy3hMp5d10wSmPhcfG6/Fww=,iv:07ToHHvJL5tzI5RZLEkfFj+tqJ1y/3XOlADB9TAIuS0=,tag:xlZWGsK5Isrr6GEpBU7YyA==,type:str]</span>
+    <span style="color:#f92672">pgp</span>:
+    -   <span style="color:#f92672">created_at</span>: <span style="color:#e6db74">&#39;2021-02-22T21:45:13Z&#39;</span>
+        <span style="color:#f92672">enc</span>: |<span style="color:#e6db74">
+</span><span style="color:#e6db74">            -----BEGIN PGP MESSAGE-----
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">            hQIMAzkIo7JC/ReAAQ/+KV60yKpfRK/qiVaRLbHwu6iTNy59O23vS4+Qt5tv8B9n
+</span><span style="color:#e6db74">            xW4IxTt4IiXeqZMDt2byJUh9KtncnNKectM5gdxDsFdh4QeChFgVYZsgl0CWG3bY
+</span><span style="color:#e6db74">            JBq6Tc/X4udagIuKYIqE+kXiiSwH3+YlKO5VbvcKJPbKg+daeWQvQvXgfghzRZpL
+</span><span style="color:#e6db74">            6auVpdw2E8K59gtADi5T+0JvCy8WXYRWu9JOP9TSQjMx1LRLXmiVITbDQFRokZmb
+</span><span style="color:#e6db74">            7sGbweCVw6ixEDVDbNZx6rh/sH6MGV+yVVd/KMAUWWkKfvezZgbU4M4i7Bfp4sKT
+</span><span style="color:#e6db74">            fp9I21UL1SERHV+6h+jsU379OYb6QdUQ3s+UU7PqejWzuojG4SaHxwPUCT05Doo7
+</span><span style="color:#e6db74">            Bf7syjGta6BJcDgMW8CTfqO/58wpBCI5m1xqri9KYF1/E3T7qP4P1vYO4XLXKJK+
+</span><span style="color:#e6db74">            Q6ee2pgb3W+y8qI0ev2QYh+lFjqH0mk7Z2L5E3JK/Jwsl+mG3jQBPo4fw/N4Iq1j
+</span><span style="color:#e6db74">            WIel4uL9PgPPAgt13Z6UaaYjmYkfiaJIK0rVaY9ArQwU+ShkqHC9nFKB4wxRrGRA
+</span><span style="color:#e6db74">            jJU/6pDLCGOfiHOrGC873qGpOnhnpEZlwxQEQClzFo+uug0bL9fMmD+UBgxaoT1C
+</span><span style="color:#e6db74">            rrXs0tVkgVlyeYDgIpjuwsZEflfxjy/vuH49VeZETn8iQ+4dpqAXFcQyoAAFNWzS
+</span><span style="color:#e6db74">            XgF3Cl2zDs/SIoRMwvZw+GlaWAX9yBLGjxjJGyA5oXkx03i1sL9+5B154O/iPm5q
+</span><span style="color:#e6db74">            QwRTqwmZ22XmtMycV4cJP4tMC/kPKvCHyv3JUO28FkXfhovh+VHCpghzAFySKxc=
+</span><span style="color:#e6db74">            =Pf3r
+</span><span style="color:#e6db74">            -----END PGP MESSAGE-----</span>            
+        <span style="color:#f92672">fp</span>: <span style="color:#ae81ff">CFF53C2B937EAFD676F75C48F70573E9355BF63B</span>
+    <span style="color:#f92672">encrypted_regex</span>: <span style="color:#ae81ff">^(data|stringData)$</span>
+    <span style="color:#f92672">version</span>: <span style="color:#ae81ff">3.6.1</span>
+</code></pre></div><p>Note that the <code>stringData.database-password</code> is no longer readable and the added <code>sops</code> block. The latter contains metadata
+for SOPS to allow decrypting the secret back to plain-text with the correct private key.</p>
+<p>The encrypted yaml file could now be checked into git and distributed. If we try to <code>kubectl apply</code> the encrypted yaml
+directly to our cluster, it will fail because the secret is not a valid Kubernetes secret in this form.</p>
+<p>We have to decrypt it before deploying it like so:</p>
+<pre class="command-line" data-user="leo" data-host="sldk.de" data-filter-output="out:"><code class="language-bash">sops --decrypt encrypted-secret.yaml | kubectl apply -f -</code></pre>
+<p>The added security of encryption adds at least two extra steps to our DevOps workflow:</p>
+<ol>
+<li>We need to make sure we only add encrypted secrets to source control.</li>
+<li>We need to decrypt secrets in our CI/CD scripts before we can deploy to a cluster.</li>
+</ol>
+<p>The latter can be automated nicely with Flux v2. Let&rsquo;s see how it&rsquo;s done.</p>
+<h2 id="enabling-sops-in-flux-v2">Enabling SOPS in Flux v2</h2>
+<p>Now that we know how SOPS works offline, we will be able to apply the same principe to
+our GitOps repositories with Flux.</p>
+<p>Flux supports SOPS out of the box, we just need to supply it with correct PGP private keys and
+its controllers will decrypt SOPS-protected yamls during reconciliation.</p>
+<h3 id="create-a-kubernetes-secret-with-your-private-pgp-key">Create a Kubernetes secret with your private PGP key</h3>
+<p>We want to export our PGP private key and store that in a Kubernetes secret that Flux can use on the cluster.</p>
+<p>We can do that with the following commands:</p>
+<pre class="command-line" data-user="leo" data-host="sldk.de" data-filter-output="out:"><code class="language-bash"># Find the ID of the private key.
+gpg --list-secret-keys ${your_email_address}
+out:sec   rsa4096 2021-02-04 [SC]
+out:CFF53C2B937EAFD676F75C48F70573E9355BF63B
+out:uid           [ultimate] Leonid Koftun &lt;leonid.koftun@gmail.com&gt;
+out:ssb   rsa4096 2021-02-04 [E]
+
+# Export the PGP secret to a new k8s secret
+# in the flux-system namespace.
+gpg --export-secret-keys \
+out:  --armor CFF53C2B937EAFD676F75C48F70573E9355BF63B |
+out:kubectl create secret generic sops-gpg \
+out:  --namespace=flux-system \
+out:  --from-file=sops.asc=/dev/stdin</code></pre>
+<p>🐔 🥚 Note that this manual step will likely need to be a part of your Flux bootstrapping routine. This
+secret can not be installed by Flux itself because of the implied chicken-egg problem.</p>
+<h3 id="setup-cluster-side-decryption-in-flux">Setup cluster-side decryption in Flux</h3>
+<p>The following examples are based on my recent <a href="https://blog.sldk.de/2021/02/introduction-to-gitops-on-kubernetes-with-flux-v2/">post about GitOps with Flux v2</a> where
+we have bootstrapped the <code>flux-system</code> namespace and deployed a new namespace from our GitOps repository.</p>
+<p>Our GitOps repo looks something like this. You can browse it on <a href="https://github.com/sladkoff/home-cluster/tree/110d76e47c597903a0b40357b606fe680cee5769">Github</a>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">.
+├── cluster
+│   ├── awesome-namespace
+│   │   └── namespace.yaml
+│   └── flux-system
+│       ├── gotk-components.yaml
+│       ├── gotk-sync.yaml
+│       └── kustomization.yaml
+└── README.md
+</code></pre></div><p>To enable SOPS for our GitOps repository we need to edit the <code>gotk-sync.yaml</code> resource:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
+<span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">source.toolkit.fluxcd.io/v1beta1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">GitRepository</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">flux-system</span>
+  <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">flux-system</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">interval</span>: <span style="color:#ae81ff">1m0s</span>
+  <span style="color:#f92672">ref</span>:
+    <span style="color:#f92672">branch</span>: <span style="color:#ae81ff">master</span>
+  <span style="color:#f92672">secretRef</span>:
+    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">flux-system</span>
+  <span style="color:#f92672">url</span>: <span style="color:#ae81ff">ssh://git@github.com/sladkoff/home-cluster</span>
+---
+<span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">kustomize.toolkit.fluxcd.io/v1beta1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Kustomization</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">flux-system</span>
+  <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">flux-system</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">interval</span>: <span style="color:#ae81ff">10m0s</span>
+  <span style="color:#f92672">path</span>: <span style="color:#ae81ff">./cluster</span>
+  <span style="color:#f92672">prune</span>: <span style="color:#66d9ef">true</span>
+  <span style="color:#f92672">sourceRef</span>:
+    <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">GitRepository</span>
+    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">flux-system</span>
+  <span style="color:#f92672">validation</span>: <span style="color:#ae81ff">client</span>
+  <span style="color:#75715e"># Enable decryption</span>
+  <span style="color:#f92672">decryption</span>:
+    <span style="color:#75715e"># Use the sops provider</span>
+    <span style="color:#f92672">provider</span>: <span style="color:#ae81ff">sops</span>
+    <span style="color:#f92672">secretRef</span>:
+      <span style="color:#75715e"># Reference the new &#39;sops-gpg&#39; secret</span>
+      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">sops-gpg</span>
+</code></pre></div><p>Nice. All that is left to do is test this by checking-in an encrypted secret like the one we created earlier
+and push our changes to the remote git repository.</p>
+<p>➡️ Example commit on <a href="https://github.com/sladkoff/home-cluster/commit/15ed3210297449bfc77740bd3d75c1d8912ea2b8">Github</a>.</p>
+<p>Once Flux reconciliation is done, you should see the new <code>my-database-secret</code> inside the <code>awesome-namespace</code>.</p>
+<h2 id="summary">Summary</h2>
+<p>We can use SOPS to encrypt and decrypt Kubernetes secrets. We learnt how to do this manually on our local machine
+and automatically on a k8s cluster with Flux v2.</p>
+<p>If any of this helped you in any way, feel free to <a href="https://www.buymeacoffee.com/sldk">buy me a coffee</a> ☕</p>
+<p>You can also give me feedback in the comments, on <a href="https://twitter.com/sladkovik">Twitter</a> or <a href="https://www.instagram.com/sladkoff2/">Instagram</a>.</p>
+<p>Thanks 🙏</p>
+]]></content></item><item><title>Setting up a Grafana Kiosk on a Raspberry Pi with Ansible</title><link>https://blog.sldk.de/2021/02/setting-up-a-grafana-kiosk-on-a-raspberry-pi-with-ansible/</link><pubDate>Fri, 26 Feb 2021 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2021/02/setting-up-a-grafana-kiosk-on-a-raspberry-pi-with-ansible/</guid><description>I was bored, I had a spare TV screen and a Raspberry Pi 3. I also love watching colorful charts on Grafana 📈
 As I&amp;rsquo;m currently learning about Ansible, I decided to write a playbook that sets up a Headless Raspberry Pi in Grafana Kiosk mode.
 This quick guide shows you how to create a Kiosk of your own.
 You&amp;rsquo;ll need:
