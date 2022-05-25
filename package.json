@@ -1,0 +1,18 @@
+{
+	"name": "sladkoff.github.io",
+	"version": "1.0.0",
+	"description": "You've found the source code for my [blog](blog.sldk.de).",
+	"scripts": {
+		"prebuild": "rimraf static/img/generated/**/* && npm run build:mermaid",
+		"build": "hugo",
+    "build:mermaid": "glob-run mmdc -i mermaid/\\*\\*/\\*.mmd -o static/img/generated/\\*.svg",
+		"create": "hugo new",
+		"start": "hugo server"
+	},
+	"homepage": "https://github.com/sladkoff/sladkoff.github.io#readme",
+	"devDependencies": {
+		"@mermaid-js/mermaid-cli": "9.1.2",
+		"glob-run": "0.1.7",
+		"hugo-bin": "0.87.1"
+	}
+}
