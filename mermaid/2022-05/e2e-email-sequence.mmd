@@ -1,0 +1,19 @@
+sequenceDiagram
+	autonumber
+
+	actor User
+  participant App
+	participant SendGrid
+	participant Mailbox
+
+	note over App,SendGrid: We won't change these components
+  
+	User-xApp: Sign Up
+	activate App
+  App-xSendGrid: Send mail
+	deactivate App
+	activate SendGrid
+  SendGrid->>Mailbox: Deliver mail
+	deactivate SendGrid
+
+	User->>Mailbox: Read email
