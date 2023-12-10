@@ -1,4 +1,153 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Leonid Koftun</title><link>https://blog.sldk.de/posts/</link><description>Recent content in Posts on Leonid Koftun</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><copyright>&lt;a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0&lt;/a></copyright><lastBuildDate>Wed, 25 May 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://blog.sldk.de/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>E2E email testing with temp-mail</title><link>https://blog.sldk.de/2022/05/e2e-email-testing-with-temp-mail/</link><pubDate>Wed, 25 May 2022 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2022/05/e2e-email-testing-with-temp-mail/</guid><description>The Problem You have a web app that sends out emails using a service like SendGrid or similar when a user signs up. It&amp;rsquo;s actually not important how the mail delivery is implemented. You want to test that an email is delivered at all using an automated test runner like Cypress.
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Leonid Koftun</title><link>https://blog.sldk.de/posts/</link><description>Recent content in Posts on Leonid Koftun</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><copyright>&lt;a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0&lt;/a></copyright><lastBuildDate>Sun, 10 Dec 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://blog.sldk.de/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>AWS API Gateway Authorizer Patterns</title><link>https://blog.sldk.de/2023/12/aws-api-gateway-authorizer-patterns/</link><pubDate>Sun, 10 Dec 2023 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2023/12/aws-api-gateway-authorizer-patterns/</guid><description>Introduction AWS API Gateway Authorizers are a powerful tool to secure API Gateway endpoints.
+The configuration of Authorizers can be a bit overwhelming at first. There are many options which have an impact on the security, performance and programming model of your API Gateway.
+This article is a collection of three patterns that I have identified from my experience with AWS API Gateway Authorizers, from discussions with peers and colleagues and from existing documentation online.</description><content type="html"><![CDATA[<h2 id="introduction">Introduction</h2>
+<p>AWS API Gateway Authorizers are a powerful tool to secure API Gateway endpoints.</p>
+<p>The configuration of Authorizers can be a bit overwhelming at first. There are many options which have an impact
+on the security, performance and programming model of your API Gateway.</p>
+<p>This article is a collection of three patterns that I have identified from my experience with AWS API Gateway Authorizers,
+from discussions with peers and colleagues and from existing documentation online.</p>
+<p>Please note that this is not a comprehensive guide to API Gateway Authorizers. It&rsquo;s a collection of abstract concepts
+that can be used to reason about the different patterns:</p>
+<ol>
+<li><a href="#no-authorizer-pattern"><strong>No-Authorizer Pattern</strong></a></li>
+<li><a href="#binary-authorizer-pattern"><strong>Binary Authorizer Pattern</strong></a></li>
+<li><a href="#context-authorizer-pattern"><strong>Context Authorizer Pattern</strong></a></li>
+</ol>
+<p>Note that the naming of the patterns is not official. I made them up to make it easier to talk about them.</p>
+<h2 id="no-authorizer-pattern">No-Authorizer Pattern</h2>
+<p>The first pattern consists of an API Gateway and integration Lambdas in the background.</p>
+<p><img src="/img/generated/no-authorizer.svg" alt="diagram"></p>
+<p>There is no authorizer Lambda configured in the API Gateway. All requests to the API Gateway are authorized by default
+and forwarded to the backend Lambdas. The Lambdas are responsible for authorization directly.</p>
+<p>In the diagram above, there is an exemplary &ldquo;External User Service&rdquo; that is queried by the backend Lambdas to authorize
+the request.</p>
+<h3 id="when-to-use">When to use</h3>
+<ul>
+<li>When there is a only handful of Lambdas to integrate with the API Gateway</li>
+<li>When it&rsquo;s possible to re-use the same authorization code across Lambdas in a maintainable way (same code repository or
+shared library)</li>
+<li>When the authorization call does not take a considerable amount of time to execute</li>
+<li>When authorization logic should be testable together with the business logic</li>
+<li>When each invocation should use the up-to-date authorization information</li>
+</ul>
+<h2 id="cacheable-vs-non-cacheable-authorizers">Cacheable vs Non-Cacheable Authorizers</h2>
+<p>Before we dive into the next patterns, let&rsquo;s talk about caching.</p>
+<p>API Gateway Authorizers can be configured to cache the authorization result for a given request for a given amount of
+time.
+This is useful when the authorization call takes a considerable amount of time to execute and the authorization result
+is not expected to change within the cache time.</p>
+<p>Caching the authorization result can significantly improve the response times of the authorizer but it comes with a
+trade-off.
+The cached authorization result is not updated until the cache expires. This means that the authorization result may not
+be in sync with the actual authorization state of the user.</p>
+<p>This needs to be taken into account when choosing the right authorizer pattern.</p>
+<h3 id="example">Example</h3>
+<ol>
+<li>There&rsquo;s a role based authorization system with 2 roles: <code>admin</code> and <code>user</code></li>
+<li>User A has an admin role and requests a resource in our AWS backend</li>
+<li>The authorization result (&ldquo;user A has admin role and is allowed to do admin things&rdquo;) is cached for a given amount of
+time</li>
+<li>In the meantime, user A&rsquo;s role is changed to <code>user</code></li>
+<li>User A requests the same resource again where the authorization result is cached =&gt; The cached authorization result
+is used and user A is allowed to do admin things even though he shouldn&rsquo;t be allowed to</li>
+</ol>
+<h2 id="binary-authorizer-pattern">Binary Authorizer Pattern</h2>
+<p>This pattern consists of an API Gateway, a single authorizer and integration Lambdas.</p>
+<p><img src="/img/generated/binary-authorizer.svg" alt="diagram"></p>
+<p>The authorizer is responsible for the authorization based on a binary decision (e.g. &ldquo;does the request contain a valid
+token&rdquo;). In the diagram above, an exemplary &ldquo;External User Service&rdquo; is queried by the authorizer to authorize the request.</p>
+<p>Authorized requests are forwarded to backend Lambdas. The Lambdas assume that the requester is authorized to perform the
+call and can focus on the business logic.</p>
+<h3 id="when-to-use-1">When to use</h3>
+<ul>
+<li>When separation of concerns between authorization and business logic is needed (code, test, deploy)</li>
+</ul>
+<h3 id="when-to-cache">When to cache</h3>
+<ul>
+<li>When the authorization call takes a considerable amount of time to execute</li>
+<li>When the security requirements allow the use of caching to improve response times of Authorizer and Lambda invocations</li>
+</ul>
+<h2 id="context-authorizer-pattern">Context Authorizer Pattern</h2>
+<p>This pattern consists of an API Gateway, a single authorizer and integration Lambdas.</p>
+<p><img src="/img/generated/context-authorizer.svg" alt="diagram"></p>
+<p>The authorizer is responsible for the authorization based on a binary decision (e.g. &ldquo;does the request contain a valid
+token&rdquo;)
+and for providing the authorization information to the backend Lambdas.</p>
+<p>The Lambdas assume that the requester is authorized to perform the call and receive additional context information to
+make more nuanced authorization decisions.</p>
+<p>In the diagram above, an exemplary &ldquo;External User Service&rdquo; is queried by the authorizer to authorize the request and
+get the role of the user. The role is then forwarded to the backend Lambdas as context information.</p>
+<h3 id="when-to-use-2">When to use</h3>
+<ul>
+<li>When the authorization conditions are complex and require evaluation on a per-Lambda basis</li>
+<li>When it&rsquo;s possible to re-use the same authorization evaluation code across Lambdas in a maintainable way
+(same code repository or shared library)</li>
+</ul>
+<h3 id="when-to-cache-1">When to cache</h3>
+<ul>
+<li>When the authorization call takes a considerable amount of time to execute</li>
+<li>When the security requirements allow the use of caching to improve response times of Authorizer and Lambda invocations</li>
+</ul>
+<h2 id="choosing-the-right-authorizer-pattern">Choosing the right authorizer pattern</h2>
+<p>Here are some questions to ask yourself when choosing the right authorizer pattern.</p>
+<p>Please note that these are based on the identity source being a authorization token.
+This does not take into account other identity sources like request parameters where caching behaves differently (I hope
+to cover this in a future article).</p>
+<ol>
+<li>
+<p>Does my use-case need strict security requirements?</p>
+<ul>
+<li>Yes:
+<ul>
+<li>No-Authorizer Pattern</li>
+<li>Non-Cacheable Binary Authorizer Pattern</li>
+<li>Non-Cacheable Context Authorizer Pattern</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Do my authorizer calls take a considerable amount of time to execute?</p>
+<ul>
+<li>Yes:
+<ul>
+<li>Cacheable Binary Authorizer Pattern</li>
+<li>Cacheable Context Authorizer Pattern</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Do all my Lambdas require the same authorization information?</p>
+<ul>
+<li>Yes:
+<ul>
+<li>Binary Authorizer Pattern</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Do my Lambdas require different authorization information?</p>
+<ul>
+<li>Yes:
+<ul>
+<li>Context Authorizer Pattern</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="conclusion">Conclusion</h2>
+<p>We have looked at different patterns for API Gateway Authorizers and learned when to use which pattern.</p>
+<p>There is no one-size-fits-all solution. It&rsquo;s important to understand the trade-offs of each pattern and choose the right
+one for your use-case.</p>
+<h2 id="further-reading-and-mentions">Further reading and mentions</h2>
+<ul>
+<li><a href="https://www.linkedin.com/pulse/aws-lambda-authorizer-patterns-caching-harshit-pandey/">AWS Lambda Authorizer Patterns and Caching</a></li>
+<li><a href="https://stackoverflow.com/q/53813947/1510659">API Gateway Authorizer and Logout (Performance/Security Considerations)</a></li>
+</ul>
+]]></content></item><item><title>E2E email testing with temp-mail</title><link>https://blog.sldk.de/2022/05/e2e-email-testing-with-temp-mail/</link><pubDate>Wed, 25 May 2022 00:00:00 +0000</pubDate><guid>https://blog.sldk.de/2022/05/e2e-email-testing-with-temp-mail/</guid><description>The Problem You have a web app that sends out emails using a service like SendGrid or similar when a user signs up. It&amp;rsquo;s actually not important how the mail delivery is implemented. You want to test that an email is delivered at all using an automated test runner like Cypress.
 This is what the sign-up implementation could look like.
 Note that we don&amp;rsquo;t want to reconfigure the app under test to use a different mail API or SDK (like MailTrap) to reroute our whole mailing traffic via a different service.</description><content type="html"><![CDATA[<h2 id="the-problem">The Problem</h2>
 <p>You have a web app that sends out emails using a service like SendGrid or similar when a user signs up. It&rsquo;s actually not important how the mail delivery is implemented. You want to test
