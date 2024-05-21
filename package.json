@@ -11,7 +11,7 @@
 	},
 	"homepage": "https://github.com/sladkoff/sladkoff.github.io#readme",
 	"devDependencies": {
-		"@mermaid-js/mermaid-cli": "9.1.2",
+		"@mermaid-js/mermaid-cli": "10.9.1",
 		"glob-run": "0.1.7",
 		"hugo-bin": "0.87.1"
 	}
